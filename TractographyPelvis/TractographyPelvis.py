@@ -349,13 +349,14 @@ class TractographyPelvisWidget:
         self.exclusionNode = self.exclusionSelector.currentNode()
 
     def onsacrumSelect(self):
-        sacrumNode = slicer.util.arrayFromVolume(self.sacrumSelector.currentNode())
-        self.sacrumNode = np.copy(sacrumNode)
-        self.sacrumNode = np.swapaxes(self.sacrumNode, 0, 2)
-        ijkToRas = vtk.vtkMatrix4x4()
-        self.sacrumSelector.currentNode().GetIJKToRASMatrix(ijkToRas)
-        self.sacrum_affine = vtkmatrix_to_numpy(ijkToRas)
-        self.ijkToRas = ijkToRas
+        if self.sacrumSelector.currentNode():
+            sacrumNode = slicer.util.arrayFromVolume(self.sacrumSelector.currentNode())
+            self.sacrumNode = np.copy(sacrumNode)
+            self.sacrumNode = np.swapaxes(self.sacrumNode, 0, 2)
+            ijkToRas = vtk.vtkMatrix4x4()
+            self.sacrumSelector.currentNode().GetIJKToRASMatrix(ijkToRas)
+            self.sacrum_affine = vtkmatrix_to_numpy(ijkToRas)
+            self.ijkToRas = ijkToRas
 
     def onfaSelect(self):
         faNode = slicer.util.arrayFromVolume(self.faSelector.currentNode())
