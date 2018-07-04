@@ -10,7 +10,7 @@ from itertools import izip
 from subprocess import (call)
 
 import ctk
-import cv2
+# import cv2
 import numpy as np
 import numpy.linalg as npl
 import qt
@@ -461,7 +461,8 @@ class TractographyPelvisLogic:
 
     @staticmethod
     def autoseeds(sacrum, fa, affine_sacrum, affine_fa):
-        struct = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        # struct = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        struct = np.ones((3, 3), dtype=np.uint8)
         sacrum_convex = np.zeros(sacrum.shape)
         for i in xrange(sacrum.shape[1]):
             slice2d = np.zeros(sacrum[:, i, :].shape)
