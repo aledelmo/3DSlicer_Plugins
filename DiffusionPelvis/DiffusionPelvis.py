@@ -24,7 +24,7 @@ def pipe(cmd, verbose=False, my_env=os.environ):
         print 'Processing command: ' + str(cmd)
 
     slicer.app.processEvents()
-    return call(cmd, shell=True, stdin=None, stdout=None, stderr=None, executable="/usr/bin/zsh", env=my_env)
+    return call(cmd, shell=True, stdin=None, stdout=None, stderr=None, executable="/usr/local/bin/zsh", env=my_env)
 
 
 def pickle_open(path):
