@@ -359,12 +359,13 @@ class TractographyPelvisWidget:
             self.ijkToRas = ijkToRas
 
     def onfaSelect(self):
-        faNode = slicer.util.arrayFromVolume(self.faSelector.currentNode())
-        self.faNode = np.copy(faNode)
-        self.faNode = np.swapaxes(self.faNode, 0, 2)
-        ijkToRas = vtk.vtkMatrix4x4()
-        self.faSelector.currentNode().GetIJKToRASMatrix(ijkToRas)
-        self.fa_affine = vtkmatrix_to_numpy(ijkToRas)
+        if self.faSelector.currentNode():
+            faNode = slicer.util.arrayFromVolume(self.faSelector.currentNode())
+            self.faNode = np.copy(faNode)
+            self.faNode = np.swapaxes(self.faNode, 0, 2)
+            ijkToRas = vtk.vtkMatrix4x4()
+            self.faSelector.currentNode().GetIJKToRASMatrix(ijkToRas)
+            self.fa_affine = vtkmatrix_to_numpy(ijkToRas)
 
     def onautoseedsSelect(self):
         self.autoseedsNode = self.autoseedsSelector.currentNode()
