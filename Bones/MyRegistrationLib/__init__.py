@@ -1,6 +1,4 @@
-rom
-mypqWidget
-import *
+from mypqWidget import *
 # from Visualization import *
 from myLandmarks import *
 # from Visualization import *

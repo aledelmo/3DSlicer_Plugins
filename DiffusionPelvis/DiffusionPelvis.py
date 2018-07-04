@@ -551,7 +551,7 @@ class DiffusionPelvisLogic:
             pass
 
         self.tmp = tempfile.mkdtemp()
-        self.my_env = pickle_open('/opt/Slicer-4.8.1-linux-amd64/environ.pickle')
+        self.my_env = pickle_open('/Applications/Slicer.app/Contents/environ.pickle')
 
     @property
     def tmp(self):
