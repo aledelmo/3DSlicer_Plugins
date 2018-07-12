@@ -11,6 +11,7 @@ from subprocess import (call)
 
 import ctk
 import dicom
+import numpy as np
 import qt
 import slicer
 from joblib import cpu_count
@@ -156,6 +157,8 @@ class DiffusionPelvisWidget:
         self.outputSelector.renameEnabled = True
         self.outputSelector.showChildNodeTypes = False
         self.outputSelector.setMRMLScene(slicer.mrmlScene)
+
+        self.outputNode = self.outputSelector.currentNode()
 
         self.outputSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onoutputSelect)
         preprocessingFormLayout.addRow('Output DWI preprocessed: ', self.outputSelector)
@@ -537,6 +540,10 @@ class DiffusionPelvisWidget:
         pass
 
 
+def round_down_to_odd(f):
+    return int(np.ceil(f) // 2 * 2 - 1)
+
+
 class DiffusionPelvisLogic:
     def __init__(self):
         try:
@@ -595,6 +602,7 @@ class DiffusionPelvisLogic:
         win_size = 2
         while win_size ** 3 < diff_dir:
             win_size += 1
+        win_size = round_down_to_odd(win_size)
         win_size = str(win_size)
 
         loadingbar.value = 3
@@ -602,8 +610,8 @@ class DiffusionPelvisLogic:
         slicer.app.processEvents()
         if check_denoising:
             if mask:
-                pipe('dwidenoise -force ' + dir + ' ' + os.path.join(self.tmp,
-                                                                     'd.mif' + ' -extent ' + win_size + ' -mask ' + mask),
+                pipe('dwidenoise -force ' + dir + ' ' + os.path.join(self.tmp, 'd.mif' + ' -extent ' + win_size + ',' + \
+                                                                     win_size + ',' + win_size + ' -mask ' + mask),
                      True, self.my_env)
             else:
                 pipe('dwidenoise -force ' + dir + ' ' + os.path.join(self.tmp, 'd.mif' + ' -extent ' + win_size), True,
@@ -683,7 +691,7 @@ class DiffusionPelvisLogic:
                  self.my_env)
             cmd = 'antsRegistration --verbose 1 --dimensionality 3 --float 0 --output \[out,b0Warped.nii,coroT2Warped.nii\] --interpolation Linear --use-histogram-matching 1 --winsorize-image-intensities \[0.005,0.995\] --initial-moving-transform \[' + t2_path + ',' + b0_path + ',1\] --transform Rigid\[0.1\] --metric MI\[' + t2_path + ',' + b0_path + ',1,32,Regular,0.25\] --convergence \[1000x500x250x100,1e-6,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox --transform Affine\[0.1\] --metric MI\[' + t2_path + ',' + b0_path + ',1,32,Regular,0.25\] --convergence \[1000x500x250x100,1e-6,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox --transform SyN\[0.1,3,0\] --metric CC\[' + t2_path + ',' + b0_path + ',1,4\] --convergence \[100x70x50x20,1e-6,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox'
             if mask_t2 and mask_b0:
-                cmd += '--masks\[' + mask_t2 + ', ' + mask_b0 + '\]'
+                cmd += ' --masks \[' + mask_t2 + ', ' + mask_b0 + '\]'
             pipe(cmd, True)
 
             pipe('warpinit -force ' + data_path + ' identity_warp\[\].nii', True, self.my_env)
