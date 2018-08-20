@@ -1,4 +1,5 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import os
 import pickle
@@ -6,9 +7,14 @@ import shutil
 import sys
 import tempfile
 import unittest
-from itertools import izip
-from subprocess import (call)
+from builtins import range
 
+try:
+    from itertools import izip as zip
+except ImportError:
+    pass
+from subprocess import (call)
+from builtins import int
 import ctk
 # import cv2
 import numpy as np
@@ -27,10 +33,10 @@ __author__ = 'Alessandro Delmonte'
 __email__ = 'delmonte.ale92@gmail.com'
 
 
-def pickle_open(path):
-    with open(path, 'rb') as handle:
-        env = pickle.load(handle)
-        return env
+# def pickle_open(path):
+#     with open(path, 'rb') as handle:
+#         env = pickle.load(handle)
+#         return env
 
 
 def vtkmatrix_to_numpy(matrix):
@@ -52,7 +58,7 @@ def pipe(cmd, verbose=False, my_env=os.environ):
 class TractographyPelvis:
     def __init__(self, parent):
         parent.title = 'Tractography Processing'
-        parent.categories = ['Diffusion Pelvis']
+        parent.categories = ['IMAG2', 'Diffusion Pelvis']
         parent.dependencies = []
         parent.contributors = ['Alessandro Delmonte (IMAG2)']
         parent.helpText = '''Tools for automatic pelvic tractography seeds extraction and DTI-based pelvic tractography 
@@ -233,6 +239,12 @@ class TractographyPelvisWidget:
         self.tractoSelector.connect('nodeActivated(vtkMRMLNode*)', self.ontractoSelect)
         tractoFormLayout.addRow('Output Fiber Bundle: ', self.tractoSelector)
 
+        line = qt.QFrame()
+        line.setFrameShape(qt.QFrame().HLine)
+        line.setFrameShadow(qt.QFrame().Sunken)
+        line.setStyleSheet("min-height: 24px")
+        tractoFormLayout.addRow(line)
+
         self.maskSelector = slicer.qMRMLNodeComboBox()
         self.maskSelector.nodeTypes = ['vtkMRMLLabelMapVolumeNode']
         self.maskSelector.selectNodeUponCreation = False
@@ -305,6 +317,12 @@ class TractographyPelvisWidget:
 
         tractoFormLayout.addRow('Maximum Fiber Length', self.sliderMaxlength)
 
+        self.combo_tract = qt.QComboBox()
+        self.combo_tract.insertItem(0, 'DTI - Deterministic - FACT')
+        self.combo_tract.insertItem(1, 'CSD - Deterministic - SD_STREAM')
+        self.combo_tract.insertItem(2, 'CSD - Probabilistic - iFOD')
+        tractoFormLayout.addRow('Algorithm', self.combo_tract)
+
         self.tractoButton = qt.QPushButton('Compute')
         self.tractoButton.toolTip = 'Run the tractography algorithm.'
         self.tractoButton.enabled = True
@@ -313,23 +331,41 @@ class TractographyPelvisWidget:
         tractoFormLayout.addRow(self.tractoButton)
 
         if self.developerMode:
-            """Developer interface"""
-            reloadCollapsibleButton = ctk.ctkCollapsibleButton()
-            reloadCollapsibleButton.text = 'Advanced - Reload && Test'
-            reloadCollapsibleButton.collapsed = False
-            self.layout.addWidget(reloadCollapsibleButton)
-            reloadFormLayout = qt.QFormLayout(reloadCollapsibleButton)
 
-            self.reloadButton = qt.QPushButton('Reload')
-            self.reloadButton.toolTip = 'Reload this module.'
-            self.reloadButton.name = 'TractographyPelvis Reload'
-            reloadFormLayout.addWidget(self.reloadButton)
+            def createHLayout(elements):
+                widget = qt.QWidget()
+                rowLayout = qt.QHBoxLayout()
+                widget.setLayout(rowLayout)
+                for element in elements:
+                    rowLayout.addWidget(element)
+                return widget
+
+            """Developer interface"""
+            self.reloadCollapsibleButton = ctk.ctkCollapsibleButton()
+            self.reloadCollapsibleButton.text = "Reload && Test"
+            self.layout.addWidget(self.reloadCollapsibleButton)
+            reloadFormLayout = qt.QFormLayout(self.reloadCollapsibleButton)
+
+            self.reloadButton = qt.QPushButton("Reload")
+            self.reloadButton.toolTip = "Reload this module."
+            self.reloadButton.name = "ScriptedLoadableModuleTemplate Reload"
             self.reloadButton.connect('clicked()', self.onReload)
 
-            self.reloadAndTestButton = qt.QPushButton('Reload and Test')
-            self.reloadAndTestButton.toolTip = 'Reload this module and then run the self tests.'
-            reloadFormLayout.addWidget(self.reloadAndTestButton)
+            self.reloadAndTestButton = qt.QPushButton("Reload and Test")
+            self.reloadAndTestButton.toolTip = "Reload this module and then run the self tests."
             self.reloadAndTestButton.connect('clicked()', self.onReloadAndTest)
+
+            self.editSourceButton = qt.QPushButton("Edit")
+            self.editSourceButton.toolTip = "Edit the module's source code."
+            self.editSourceButton.connect('clicked()', self.onEditSource)
+
+            self.restartButton = qt.QPushButton("Restart Slicer")
+            self.restartButton.toolTip = "Restart Slicer"
+            self.restartButton.name = "ScriptedLoadableModuleTemplate Restart"
+            self.restartButton.connect('clicked()', slicer.app.restart)
+
+            reloadFormLayout.addWidget(
+                createHLayout([self.reloadButton, self.reloadAndTestButton, self.editSourceButton, self.restartButton]))
 
         self.layout.addStretch(1)
 
@@ -377,7 +413,7 @@ class TractographyPelvisWidget:
             self.autoseedsNode.SetIJKToRASMatrix(self.ijkToRas)
 
     def ontractoButton(self):
-        if self.dwiNode:
+        if self.dwiNode and self.sliderSeeds.value > self.sliderCutoff.value and self.sliderMaxlength.value > self.sliderMinlength.value:
             data_path = os.path.join(self.logic.tmp, 'data.nii')
             bval_path = os.path.join(self.logic.tmp, 'data.bval')
             bvec_path = os.path.join(self.logic.tmp, 'data.bvec')
@@ -410,15 +446,27 @@ class TractographyPelvisWidget:
                 slicer.util.saveNode(self.exclusionNode, excl_path, properties)
             else:
                 excl_path = None
-            if self.sliderSeeds.value > self.sliderCutoff.value and self.sliderMaxlength.value > self.sliderMinlength.value:
-                path = self.logic.tracts(self.sliderMinlength.value, self.sliderMaxlength.value,
-                                         self.sliderCutoff.value, self.sliderSeeds.value, data_path, mask_path,
-                                         seeds_path,
-                                         excl_path, bvec_path, bval_path)
-                self.tractoNode = slicer.util.loadFiberBundle(path, True)
-                # _, self.tractoNode = slicer.util.loadFiberBundle(path, returnNode=True)
+
+            path = self.logic.tracts(self.sliderMinlength.value, self.sliderMaxlength.value,
+                                     self.sliderCutoff.value, self.sliderSeeds.value, data_path, mask_path,
+                                     seeds_path,
+                                     excl_path, bvec_path, bval_path, self.combo_tract.currentIndex)
+
+            nodename = self.tractoNode.GetName()
+            slicer.mrmlScene.RemoveNode(self.tractoNode)
+            _, tractogramNode = slicer.util.loadFiberBundle(path, returnNode=True)
+            tractogramNode.SetName(nodename)
+
+            self.cleanup()
 
     def onReload(self):
+
+        print('\n' * 2)
+        print('-' * 30)
+        print('Reloading module: ' + self.moduleName)
+        print('-' * 30)
+        print('\n' * 2)
+
         slicer.util.reloadScriptedModule(self.moduleName)
 
     def onReloadAndTest(self):
@@ -429,11 +477,23 @@ class TractographyPelvisWidget:
         except Exception, e:
             import traceback
             traceback.print_exc()
-            errorMessage = 'Reload and Test: Exception!\n\n" + str(e) + "\n\nSee Python Console for Stack Trace'
+            errorMessage = "Reload and Test: Exception!\n\n" + str(e) + "\n\nSee Python Console for Stack Trace"
             slicer.util.errorDisplay(errorMessage)
 
+    def onEditSource(self):
+        filePath = slicer.util.modulePath(self.moduleName)
+        qt.QDesktopServices.openUrl(qt.QUrl("file:///" + filePath, qt.QUrl.TolerantMode))
+
     def cleanup(self):
-        pass
+        for filename in os.listdir(self.logic.tmp):
+            path = os.path.join(self.logic.tmp, filename)
+            try:
+                if os.path.isfile(path):
+                    os.unlink(path)
+                elif os.path.isdir(path):
+                    shutil.rmtree(path)
+            except:
+                pass
 
 
 class TractographyPelvisLogic:
@@ -450,7 +510,8 @@ class TractographyPelvisLogic:
             pass
 
         self.tmp = tempfile.mkdtemp()
-        self.my_env = pickle_open('/Applications/Slicer.app/Contents/environ.pickle')
+        # self.my_env = pickle_open('/Applications/Slicer.app/Contents/environ.pickle')
+        self.my_env = slicer.util.startupEnvironment()
 
     def __del__(self):
         shutil.rmtree(self.tmp)
@@ -466,7 +527,7 @@ class TractographyPelvisLogic:
         # struct = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
         struct = np.ones((3, 3), dtype=np.uint8)
         sacrum_convex = np.zeros(sacrum.shape)
-        for i in xrange(sacrum.shape[1]):
+        for i in range(sacrum.shape[1]):
             slice2d = np.zeros(sacrum[:, i, :].shape)
             borders = np.logical_xor(sacrum[:, i, :], binary_erosion(sacrum[:, i, :], struct))
             points = np.argwhere(borders)
@@ -504,27 +565,55 @@ class TractographyPelvisLogic:
 
         return sacrum_convex.astype(np.int16)
 
-    def tracts(self, Minlength, Maxlength, Cutoff, Seeds_T, data_path, Mask, Seeds, ROE, fbvec, fbval):
-        string = 'dwi2tensor -force ' + data_path + ' ' + os.path.join(self.tmp,
-                                                                       'DTI.mif') + ' -fslgrad ' + fbvec + ' ' + fbval
-        if Mask:
-            string = string + ' -mask ' + Mask
-        pipe(string, True, self.my_env)
+    def tracts(self, Minlength, Maxlength, Cutoff, Seeds_T, data_path, Mask, Seeds, ROE, fbvec, fbval, mode):
+        if mode == 0:
+            string = 'dwi2tensor -force ' + data_path + ' ' + os.path.join(self.tmp,
+                                                                           'DTI.mif') + ' -fslgrad ' + fbvec + ' ' + fbval
+            if Mask:
+                string = string + ' -mask ' + Mask
+            pipe(string, True, self.my_env)
 
-        pipe('tensor2metric -force ' + os.path.join(self.tmp, 'DTI.mif') + ' -vec ' + os.path.join(self.tmp,
-                                                                                                   'eigen.mif'),
-             True, self.my_env)
+            pipe('tensor2metric -force ' + os.path.join(self.tmp, 'DTI.mif') + ' -vec ' + os.path.join(self.tmp,
+                                                                                                       'eigen.mif'),
+                 True, self.my_env)
 
-        string = 'tckgen -force ' + os.path.join(self.tmp, 'eigen.mif') + ' ' + os.path.join(self.tmp,
-                                                                                             'tracto.tck') + ' -algorithm FACT -cutoff ' + str(
-            Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + ' -minlength ' + str(Minlength) + \
-                 ' -maxlength ' + str(Maxlength) + ' -seed_random_per_voxel ' + Seeds + ' 3 '
-        if Mask:
-            string = string + ' -mask ' + Mask
-        if ROE:
-            string = string + ' -exclude ' + ROE
+            string = 'tckgen -force ' + os.path.join(self.tmp, 'eigen.mif') + ' ' + os.path.join(self.tmp,
+                                                                                                 'tracto.tck') + ' -algorithm FACT -cutoff ' + str(
+                Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + ' -minlength ' + str(Minlength) + \
+                     ' -maxlength ' + str(Maxlength) + ' -seed_random_per_voxel ' + Seeds + ' 3 '
+            if Mask:
+                string = string + ' -mask ' + Mask
+            if ROE:
+                string = string + ' -exclude ' + ROE
 
-        pipe(string, True, self.my_env)
+            pipe(string, True, self.my_env)
+        else:
+            string = 'dwi2response tournier ' + data_path + ' ' + os.path.join(self.tmp,
+                                                                               'response.txt') + ' -fslgrad ' + fbvec + ' ' + fbval
+            pipe(string, True, self.my_env)
+
+            string = 'dwi2fod csd ' + data_path + ' ' + os.path.join(self.tmp, 'response.txt') + ' ' + os.path.join(
+                self.tmp, 'FOD.mif') + ' -fslgrad ' + fbvec + ' ' + fbval
+            if Mask:
+                string = string + ' -mask ' + Mask
+            pipe(string, True, self.my_env)
+
+            if mode == 1:
+                algorithm = 'SD_STREAM'
+            else:
+                algorithm = 'iFOD2'
+
+            string = 'tckgen -force ' + os.path.join(self.tmp, 'FOD.mif') + ' ' + os.path.join(self.tmp, 'tracto.tck') + \
+                     ' -algorithm ' + algorithm + ' -cutoff ' + str(Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + \
+                     ' -minlength ' + str(Minlength) + ' -maxlength ' + str(Maxlength) + ' -seed_random_per_voxel ' \
+                     + Seeds + ' 3  -fslgrad ' + fbvec + ' ' + fbval
+
+            if Mask:
+                string = string + ' -mask ' + Mask
+            if ROE:
+                string = string + ' -exclude ' + ROE
+
+            pipe(string, True, self.my_env)
 
         final_path = tck2vtk(os.path.join(self.tmp, 'tracto.tck'))
 
@@ -551,9 +640,9 @@ def save_vtk(filename, tracts, lines_indices=None):
     lengths = [len(p) for p in tracts]
     line_starts = ns.numpy.r_[0, ns.numpy.cumsum(lengths)]
     if lines_indices is None:
-        lines_indices = [ns.numpy.arange(length) + line_start for length, line_start in izip(lengths, line_starts)]
+        lines_indices = [ns.numpy.arange(length) + line_start for length, line_start in zip(lengths, line_starts)]
 
-    ids = ns.numpy.hstack([ns.numpy.r_[c[0], c[1]] for c in izip(lengths, lines_indices)])
+    ids = ns.numpy.hstack([ns.numpy.r_[c[0], c[1]] for c in zip(lengths, lines_indices)])
     vtk_ids = ns.numpy_to_vtkIdTypeArray(ids.astype('int64'), deep=True)
 
     cell_array = vtk.vtkCellArray()
