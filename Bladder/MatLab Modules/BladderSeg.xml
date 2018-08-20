@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<executable>
+  <category>Matlab</category>
+  <title>Bladder Segmentation</title>
+  <description><![CDATA[Perform the segmentation image processing in Matlab.]]></description>
+  <version>0.0.0.1</version>
+  <documentation-url> </documentation-url>
+  <license/>
+  <contributor>Luca De Masi</contributor>
+  <acknowledgements><![CDATA[]]></acknowledgements>
+  
+  <parameters>
+    <label>IO</label>
+    <description><![CDATA[Input/output parameters]]></description>
+    
+    <image>
+      <label>Input Volume</label>
+      <description><![CDATA[Input volume to be segment]]></description>
+      <longflag>inputvolume</longflag>
+      <channel>input</channel>
+    </image>
+    
+    <point multiple="true" coordinateSystem="ras">
+      <label>Point</label>
+      <description><![CDATA[Initial points of segmentation, select one point inside of bladder and, if necessary others in complex shapes]]></description>
+      <longflag>point</longflag>      
+      <default>0,0,0</default>
+    </point>
+    
+    <image>
+      <label>Output-LS-label</label>
+      <description><![CDATA[Output Segmented by LevelSet]]></description>
+      <longflag>outputMapLS</longflag>
+      <channel>output</channel>
+    </image>
+    
+    <image>
+      <label>Output-SegAuto-label</label>
+      <description><![CDATA[Output Segmented]]></description>
+      <longflag>outputMap</longflag>
+      <channel>output</channel>
+    </image>
+    
+    
+  </parameters>
+
+</executable>
