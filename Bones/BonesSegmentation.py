@@ -2,6 +2,12 @@ import os
 import string
 import time
 import unittest
+from builtins import range
+
+try:
+    from itertools import izip as zip
+except ImportError:
+    pass
 
 import RegistrationLib
 from __main__ import vtk, qt, ctk, slicer
@@ -16,7 +22,7 @@ import MyRegistrationLib
 class BonesSegmentation:
     def __init__(self, parent):
         parent.title = "Bones"
-        parent.categories = ["Pelvic Segmentation"]
+        parent.categories = ['IMAG2', "Pelvic Segmentation"]
         parent.dependencies = []
         parent.contributors = ["Alessio Virzi' (IMAG2)"]
         parent.helpText = string.Template("""
@@ -301,7 +307,7 @@ class BonesSegmentationWidget:
         #
         numNodes = slicer.mrmlScene.GetNumberOfNodesByClass("vtkMRMLModelHierarchyNode")
         outHierarchy = None
-        for n in xrange(numNodes):
+        for n in range(numNodes):
             node = slicer.mrmlScene.GetNthNodeByClass(n, "vtkMRMLModelHierarchyNode")
             if node.GetName() == "Bones Models":
                 outHierarchy = node
@@ -1184,7 +1190,7 @@ class BonesSegmentationTest(unittest.TestCase):
             interator.SetControlKey(1)
         interator.SetEventPosition(*start)
         down()
-        for step in xrange(steps):
+        for step in range(steps):
             frac = float(step + 1) / steps
             x = int(start[0] + frac * (end[0] - start[0]))
             y = int(start[1] + frac * (end[1] - start[1]))
@@ -1207,7 +1213,7 @@ class BonesSegmentationTest(unittest.TestCase):
         if 'Control' in modifiers:
             interator.SetControlKey(1)
         interator.SetEventPosition(*start)
-        for step in xrange(steps):
+        for step in range(steps):
             frac = float(step + 1) / steps
             x = int(start[0] + frac * (end[0] - start[0]))
             y = int(start[1] + frac * (end[1] - start[1]))
