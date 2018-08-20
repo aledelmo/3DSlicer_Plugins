@@ -1,4 +1,5 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import os
 import pickle
@@ -28,10 +29,10 @@ def pipe(cmd, verbose=False, my_env=os.environ):
     return call(cmd, shell=True, stdin=None, stdout=None, stderr=None, executable="/usr/local/bin/zsh", env=my_env)
 
 
-def pickle_open(path):
-    with open(path, 'rb') as handle:
-        env = pickle.load(handle)
-        return env
+# def pickle_open(path):
+#     with open(path, 'rb') as handle:
+#         env = pickle.load(handle)
+#         return env
 
 
 @contextmanager
@@ -47,7 +48,7 @@ def cd(newdir):
 class DiffusionPelvis:
     def __init__(self, parent):
         parent.title = 'DWI Processing'
-        parent.categories = ['Diffusion Pelvis']
+        parent.categories = ['IMAG2', 'Diffusion Pelvis']
         parent.dependencies = []
         parent.contributors = ['Alessandro Delmonte (IMAG2)']
         parent.helpText = '''Tools for pelvic diffusion data preprocessing and analysis, inter-modalities registration
@@ -122,14 +123,58 @@ class DiffusionPelvisWidget:
 
         preprocessingFormLayout = qt.QFormLayout(preprocesssingCollapsibleButton)
 
+        groupbox = qt.QGroupBox()
+        groupbox.setTitle('Choose either a folder or an existing node:')
+        groupbox.setContentsMargins(11, 20, 11, 11)
+        grid_layout = qt.QGridLayout(groupbox)
+        grid_layout.setColumnStretch(1, 1)
+        grid_layout.setColumnStretch(2, 1)
+        grid_layout.setColumnStretch(3, 1)
+
         self.dialogfolder = qt.QFileDialog()
         self.dialogfolder.FileMode(2)
         self.dialogfolder.setFileMode(4)
         self.dialogfolderbutton = qt.QPushButton('Select DICOM Directory')
         self.dialogfolderbutton.enabled = True
 
+        self.dir = None
+
         self.dialogfolderbutton.connect('clicked(bool)', self.onApplydialogfolderbutton)
-        preprocessingFormLayout.addRow('Input DICOM DWI: ', self.dialogfolderbutton)
+
+        textwidget = qt.QLabel()
+        textwidget.setText('Input DICOM DWI: ')
+        grid_layout.addWidget(textwidget, 0, 0, 0)
+        grid_layout.addWidget(self.dialogfolderbutton, 0, 1, 1, 3)
+
+        groupbox.setLayout(grid_layout)
+
+        self.DWISelectorPre = slicer.qMRMLNodeComboBox()
+        self.DWISelectorPre.nodeTypes = ['vtkMRMLDiffusionWeightedVolumeNode']
+        self.DWISelectorPre.selectNodeUponCreation = True
+        self.DWISelectorPre.addEnabled = False
+        self.DWISelectorPre.removeEnabled = False
+        self.DWISelectorPre.noneEnabled = True
+        self.DWISelectorPre.showHidden = False
+        self.DWISelectorPre.renameEnabled = True
+        self.DWISelectorPre.showChildNodeTypes = False
+        self.DWISelectorPre.setMRMLScene(slicer.mrmlScene)
+
+        self.dwipreNode = self.DWISelectorPre.currentNode()
+
+        self.DWISelectorPre.connect('currentNodeChanged(vtkMRMLNode*)', self.ondwipreSelect)
+
+        textwidget2 = qt.QLabel()
+        textwidget2.setText('Input Node DWI: ')
+        grid_layout.addWidget(textwidget2, 1, 0, 0)
+        grid_layout.addWidget(self.DWISelectorPre, 1, 1, 1, 3)
+
+        self.radio_dir = qt.QRadioButton('Use Folder')
+        self.radio_dir.setChecked(True)
+        self.radio_node = qt.QRadioButton('Use Node')
+        grid_layout.addWidget(self.radio_dir, 2, 1, 0)
+        grid_layout.addWidget(self.radio_node, 2, 2, 0)
+
+        preprocessingFormLayout.addRow(groupbox)
 
         self.maskSelector = slicer.qMRMLNodeComboBox()
         self.maskSelector.nodeTypes = ['vtkMRMLLabelMapVolumeNode']
@@ -268,6 +313,41 @@ class DiffusionPelvisWidget:
         self.outDWISelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onoutdwiSelect)
         registrationFormLayout.addRow('Output DWI: ', self.outDWISelector)
 
+        groupbox2 = qt.QGroupBox()
+        groupbox2.setTitle('Choose the registration type:')
+
+        grid_layout2 = qt.QGridLayout(groupbox2)
+        grid_layout2.setAlignment(4)
+        grid_layout2.setColumnMinimumWidth(0, 150)
+        grid_layout2.setColumnMinimumWidth(1, 150)
+        grid_layout2.setColumnMinimumWidth(2, 150)
+        self.radio_rig = qt.QRadioButton('Rigid')
+        self.radio_aff = qt.QRadioButton('Rigid + Affine')
+        self.radio_aff.setChecked(True)
+        self.radio_ela = qt.QRadioButton('Rigid + Affine + Elastic')
+        grid_layout2.addWidget(self.radio_rig, 0, 0, 0)
+        grid_layout2.addWidget(self.radio_aff, 0, 1, 0)
+        grid_layout2.addWidget(self.radio_ela, 0, 2, 0)
+
+        registrationFormLayout.addRow(groupbox2)
+
+        groupbox3 = qt.QGroupBox()
+        groupbox3.setStyleSheet("border:none")
+        grid_layout3 = qt.QGridLayout(groupbox3)
+        grid_layout3.setColumnMinimumWidth(0, 250)
+        textwidget3 = qt.QLabel()
+        textwidget3.setText('Elastic deformation intensity (if applicable): ')
+        self.radio_low = qt.QRadioButton('Weak')
+        self.radio_mid = qt.QRadioButton('Normal')
+        self.radio_mid.setChecked(True)
+        self.radio_hig = qt.QRadioButton('Strong')
+        grid_layout3.addWidget(textwidget3, 0, 0, 0)
+        grid_layout3.addWidget(self.radio_low, 0, 1, 0)
+        grid_layout3.addWidget(self.radio_mid, 0, 2, 0)
+        grid_layout3.addWidget(self.radio_hig, 0, 3, 0)
+
+        registrationFormLayout.addRow(groupbox3)
+
         self.regButton = qt.QPushButton('Register')
         self.regButton.toolTip = 'Register the DWI on the T2 image'
         self.regButton.enabled = True
@@ -321,7 +401,7 @@ class DiffusionPelvisWidget:
         self.mapSelector.removeEnabled = False
         self.mapSelector.noneEnabled = False
         self.mapSelector.showHidden = False
-        self.mapSelector.renameEnabled = False
+        self.mapSelector.renameEnabled = True
         self.mapSelector.showChildNodeTypes = False
         self.mapSelector.setMRMLScene(slicer.mrmlScene)
 
@@ -330,14 +410,17 @@ class DiffusionPelvisWidget:
         self.mapSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onmapSelect)
         measuresFormLayout.addRow('Output Metric Volume: ', self.mapSelector)
 
-        self.radio_b0 = qt.QRadioButton('b0')
+        self.radio_b0 = qt.QRadioButton('b-zero')
         self.radio_b0.setChecked(True)
         self.radio_fa = qt.QRadioButton('Fractional Anisotropy')
         self.radio_md = qt.QRadioButton('Mean Diffusivity')
 
-        measuresFormLayout.addRow('Measure', self.radio_b0)
-        measuresFormLayout.addRow('    ', self.radio_fa)
-        measuresFormLayout.addRow('    ', self.radio_md)
+        grid_layout4 = qt.QGridLayout()
+        grid_layout4.addWidget(self.radio_b0, 0, 0, 0)
+        grid_layout4.addWidget(self.radio_fa, 0, 1, 0)
+        grid_layout4.addWidget(self.radio_md, 0, 2, 0)
+
+        measuresFormLayout.addRow('Measure', grid_layout4)
 
         self.measureButton = qt.QPushButton('Extract')
         self.measureButton.toolTip = 'Extract the selected metric.'
@@ -347,23 +430,41 @@ class DiffusionPelvisWidget:
         measuresFormLayout.addRow(self.measureButton)
 
         if self.developerMode:
-            """Developer interface"""
-            reloadCollapsibleButton = ctk.ctkCollapsibleButton()
-            reloadCollapsibleButton.text = 'Advanced - Reload && Test'
-            reloadCollapsibleButton.collapsed = False
-            self.layout.addWidget(reloadCollapsibleButton)
-            reloadFormLayout = qt.QFormLayout(reloadCollapsibleButton)
 
-            self.reloadButton = qt.QPushButton('Reload')
-            self.reloadButton.toolTip = 'Reload this module.'
-            self.reloadButton.name = 'DiffusionPelvis Reload'
-            reloadFormLayout.addWidget(self.reloadButton)
+            def createHLayout(elements):
+                widget = qt.QWidget()
+                rowLayout = qt.QHBoxLayout()
+                widget.setLayout(rowLayout)
+                for element in elements:
+                    rowLayout.addWidget(element)
+                return widget
+
+            """Developer interface"""
+            self.reloadCollapsibleButton = ctk.ctkCollapsibleButton()
+            self.reloadCollapsibleButton.text = "Reload && Test"
+            self.layout.addWidget(self.reloadCollapsibleButton)
+            reloadFormLayout = qt.QFormLayout(self.reloadCollapsibleButton)
+
+            self.reloadButton = qt.QPushButton("Reload")
+            self.reloadButton.toolTip = "Reload this module."
+            self.reloadButton.name = "ScriptedLoadableModuleTemplate Reload"
             self.reloadButton.connect('clicked()', self.onReload)
 
-            self.reloadAndTestButton = qt.QPushButton('Reload and Test')
-            self.reloadAndTestButton.toolTip = 'Reload this module and then run the self tests.'
-            reloadFormLayout.addWidget(self.reloadAndTestButton)
+            self.reloadAndTestButton = qt.QPushButton("Reload and Test")
+            self.reloadAndTestButton.toolTip = "Reload this module and then run the self tests."
             self.reloadAndTestButton.connect('clicked()', self.onReloadAndTest)
+
+            self.editSourceButton = qt.QPushButton("Edit")
+            self.editSourceButton.toolTip = "Edit the module's source code."
+            self.editSourceButton.connect('clicked()', self.onEditSource)
+
+            self.restartButton = qt.QPushButton("Restart Slicer")
+            self.restartButton.toolTip = "Restart Slicer"
+            self.restartButton.name = "ScriptedLoadableModuleTemplate Restart"
+            self.restartButton.connect('clicked()', slicer.app.restart)
+
+            reloadFormLayout.addWidget(
+                createHLayout([self.reloadButton, self.reloadAndTestButton, self.editSourceButton, self.restartButton]))
 
         self.layout.addStretch(1)
 
@@ -378,30 +479,60 @@ class DiffusionPelvisWidget:
         self.outputNode = self.outputSelector.currentNode()
 
     def onpreprocButton(self):
+        if self.outputNode and (self.dir or self.dwipreNode):
+            loadingbar = qt.QProgressDialog(slicer.util.mainWindow())
+            loadingbar.maximum = 8
+            loadingbar.minimum = 0
+            loadingbar.windowTitle = 'Preprocessing...'
+            loadingbar.labelText = 'Saving Mask File...'
+            slicer.app.processEvents()
 
-        loadingbar = qt.QProgressDialog(slicer.util.mainWindow())
-        loadingbar.maximum = 8
-        loadingbar.minimum = 0
-        loadingbar.windowTitle = 'Preprocessing...'
-        loadingbar.labelText = 'Saving Mask File...'
-        slicer.app.processEvents()
-
-        if self.dir and self.outputNode:
-
-            if self.maskNode:
-                mask_dir = os.path.join(self.logic.tmp, 'whole_pelvis_mask.nii')
-                properties = {}
-                properties['useCompression'] = 0
-                slicer.util.saveNode(self.maskNode, mask_dir, properties)
-                loadingbar.value = 1
-                loadingbar.labelText = 'Denoising...'
-                slicer.app.processEvents()
+            if self.radio_dir.isChecked():
+                if self.dir and self.outputNode:
+                    if self.maskNode:
+                        mask_dir = os.path.join(self.logic.tmp, 'whole_pelvis_mask.nii')
+                        properties = {}
+                        properties['useCompression'] = 0
+                        slicer.util.saveNode(self.maskNode, mask_dir, properties)
+                        loadingbar.value = 1
+                        loadingbar.labelText = 'Denoising...'
+                        slicer.app.processEvents()
+                    else:
+                        mask_dir = None
+                    nii_path, bval_path, bvec_path = self.logic.preproc(self.dir, self.check_denoising.isChecked(),
+                                                                        self.check_gibbs.isChecked(),
+                                                                        self.check_preproc.isChecked(),
+                                                                        mask_dir, loadingbar, None, None, None)
             else:
-                mask_dir = None
-            nii_path, bval_path, bvec_path = self.logic.preproc(self.dir, self.check_denoising.isChecked(),
-                                                                self.check_gibbs.isChecked(),
-                                                                self.check_preproc.isChecked(),
-                                                                mask_dir, loadingbar)
+                if self.dwipreNode and self.outputNode:
+                    if self.maskNode:
+                        mask_dir = os.path.join(self.logic.tmp, 'whole_pelvis_mask.nii')
+                        properties = {}
+                        properties['useCompression'] = 0
+                        slicer.util.saveNode(self.maskNode, mask_dir, properties)
+                        loadingbar.value = 1
+                        loadingbar.labelText = 'Denoising...'
+                        slicer.app.processEvents()
+                    else:
+                        mask_dir = None
+
+                    data_path = os.path.join(self.logic.tmp, 'data.nii')
+                    bval_path_in = os.path.join(self.logic.tmp, 'data.bval')
+                    bvec_path_in = os.path.join(self.logic.tmp, 'data.bvec')
+                    parameters = {}
+                    parameters['conversionMode'] = 'NrrdToFSL'
+                    parameters['inputVolume'] = self.dwipreNode.GetID()
+                    parameters['outputNiftiFile'] = data_path
+                    parameters['outputBValues'] = bval_path_in
+                    parameters['outputBVectors'] = bvec_path_in
+                    converter = slicer.modules.dwiconvert
+                    slicer.cli.runSync(converter, None, parameters)
+
+                    nii_path, bval_path, bvec_path = self.logic.preproc(self.dir, self.check_denoising.isChecked(),
+                                                                        self.check_gibbs.isChecked(),
+                                                                        self.check_preproc.isChecked(),
+                                                                        mask_dir, loadingbar,
+                                                                        data_path, bval_path_in, bvec_path_in)
 
             parameters = {}
             parameters['conversionMode'] = 'FSLToNrrd'
@@ -413,6 +544,11 @@ class DiffusionPelvisWidget:
             parameters['transpose'] = True
             converter = slicer.modules.dwiconvert
             slicer.cli.runSync(converter, None, parameters)
+
+            self.cleanup()
+
+    def ondwipreSelect(self):
+        self.dwipreNode = self.DWISelectorPre.currentNode()
 
     def ondwiSelect(self):
         self.dwiNode = self.DWISelector.currentNode()
@@ -430,7 +566,7 @@ class DiffusionPelvisWidget:
         self.outdwiNode = self.outDWISelector.currentNode()
 
     def onregButton(self):
-        if self.dwiNode and self.t2Node:
+        if self.dwiNode and self.t2Node and self.outdwiNode:
             data_path = os.path.join(self.logic.tmp, 'data.nii')
             bval_path = os.path.join(self.logic.tmp, 'data.bval')
             bvec_path = os.path.join(self.logic.tmp, 'data.bvec')
@@ -463,7 +599,9 @@ class DiffusionPelvisWidget:
             else:
                 t2mask_path = None
 
-            warped_path = self.logic.register(data_path, bval_path, bvec_path, t2_path, t2mask_path, b0mask_path)
+            warped_path = self.logic.register(data_path, bval_path, bvec_path, t2_path, t2mask_path, b0mask_path,
+                                              self.radio_aff.isChecked(), self.radio_ela.isChecked(),
+                                              self.radio_low.isChecked(), self.radio_mid.isChecked())
 
             parameters = {}
             parameters['conversionMode'] = 'FSLToNrrd'
@@ -476,6 +614,8 @@ class DiffusionPelvisWidget:
             converter = slicer.modules.dwiconvert
             slicer.cli.runSync(converter, None, parameters)
 
+            self.cleanup()
+
     def onmdwiSelect(self):
         self.mdwiNode = self.mDWISelector.currentNode()
 
@@ -486,43 +626,48 @@ class DiffusionPelvisWidget:
         self.measuremaskNode = self.measuremaskSelector.currentNode()
 
     def onmeasureButton(self):
-        switch = {'b0': self.radio_b0.isChecked(), 'fa': self.radio_fa.isChecked(), 'md': self.radio_md.isChecked()}
+        if self.mdwiNode and self.mapNode:
+            switch = {'b0': self.radio_b0.isChecked(), 'fa': self.radio_fa.isChecked(), 'md': self.radio_md.isChecked()}
 
-        data_path = os.path.join(self.logic.tmp, 'measure_data.nii')
-        bval_path = os.path.join(self.logic.tmp, 'measure.bval')
-        bvec_path = os.path.join(self.logic.tmp, 'measure.bvec')
-        parameters = {}
-        parameters['conversionMode'] = 'NrrdToFSL'
-        parameters['inputVolume'] = self.mdwiNode.GetID()
-        parameters['outputNiftiFile'] = data_path
-        parameters['outputBValues'] = bval_path
-        parameters['outputBVectors'] = bvec_path
-        converter = slicer.modules.dwiconvert
-        slicer.cli.runSync(converter, None, parameters)
+            data_path = os.path.join(self.logic.tmp, 'measure_data.nii')
+            bval_path = os.path.join(self.logic.tmp, 'measure.bval')
+            bvec_path = os.path.join(self.logic.tmp, 'measure.bvec')
+            parameters = {}
+            parameters['conversionMode'] = 'NrrdToFSL'
+            parameters['inputVolume'] = self.mdwiNode.GetID()
+            parameters['outputNiftiFile'] = data_path
+            parameters['outputBValues'] = bval_path
+            parameters['outputBVectors'] = bvec_path
+            converter = slicer.modules.dwiconvert
+            slicer.cli.runSync(converter, None, parameters)
 
-        properties = {}
-        properties['useCompression'] = 0
+            properties = {}
+            properties['useCompression'] = 0
 
-        if self.b0maskNode:
-            measuremask_path = os.path.join(self.logic.tmp, 'measure_mask.nii')
-            slicer.util.saveNode(self.b0maskNode, measuremask_path, properties)
-        else:
-            measuremask_path = None
+            if self.b0maskNode:
+                measuremask_path = os.path.join(self.logic.tmp, 'measure_mask.nii')
+                slicer.util.saveNode(self.b0maskNode, measuremask_path, properties)
+            else:
+                measuremask_path = None
 
-        path = self.logic.extract(data_path, bval_path, bvec_path, measuremask_path, switch)
+            path = self.logic.extract(data_path, bval_path, bvec_path, measuremask_path, switch)
 
-        _, upNode = slicer.util.loadVolume(path, returnNode=True)
-        # _, self.mapNode = slicer.util.loadVolume(path,
-        #                                          properties={'name': self.mapNode.GetID(), 'show': True,
-        #                                                      'autoWindowLevel': True},
-        #                                          returnNode=True)
+            _, upNode = slicer.util.loadVolume(path, returnNode=True)
 
-        # upNode.CopyWithScene(self.mapNode)
-        self.mapNode.CopyWithScene(upNode)
-        # self.mapNode = slicer.vtkSlicerVolumesLogic().CloneVolume(slicer.mrmlScene, upNode)
-        # upNode.SetName(self.mapNode.GetName())
+            nodename = self.mapNode.GetName()
+            slicer.mrmlScene.RemoveNode(self.mapNode)
+            upNode.SetName(nodename)
+
+            self.cleanup()
 
     def onReload(self):
+
+        print('\n' * 2)
+        print('-' * 30)
+        print('Reloading module: ' + self.moduleName)
+        print('-' * 30)
+        print('\n' * 2)
+
         slicer.util.reloadScriptedModule(self.moduleName)
 
     def onReloadAndTest(self):
@@ -533,11 +678,23 @@ class DiffusionPelvisWidget:
         except Exception, e:
             import traceback
             traceback.print_exc()
-            errorMessage = 'Reload and Test: Exception!\n\n" + str(e) + "\n\nSee Python Console for Stack Trace'
+            errorMessage = "Reload and Test: Exception!\n\n" + str(e) + "\n\nSee Python Console for Stack Trace"
             slicer.util.errorDisplay(errorMessage)
 
+    def onEditSource(self):
+        filePath = slicer.util.modulePath(self.moduleName)
+        qt.QDesktopServices.openUrl(qt.QUrl("file:///" + filePath, qt.QUrl.TolerantMode))
+
     def cleanup(self):
-        pass
+        for filename in os.listdir(self.logic.tmp):
+            path = os.path.join(self.logic.tmp, filename)
+            try:
+                if os.path.isfile(path):
+                    os.unlink(path)
+                elif os.path.isdir(path):
+                    shutil.rmtree(path)
+            except:
+                pass
 
 
 def round_down_to_odd(f):
@@ -558,7 +715,8 @@ class DiffusionPelvisLogic:
             pass
 
         self.tmp = tempfile.mkdtemp()
-        self.my_env = pickle_open('/Applications/Slicer.app/Contents/environ.pickle')
+        # self.my_env = pickle_open('/Applications/Slicer.app/Contents/environ.pickle')
+        self.my_env = slicer.util.startupEnvironment()
 
     @property
     def tmp(self):
@@ -577,59 +735,96 @@ class DiffusionPelvisLogic:
     def __str__(self):
         return 'DiffusionPelvis implementation class'
 
-    def preproc(self, dir, check_denoising, check_gibbs, check_preproc, mask, loadingbar):
-        loadingbar.value = 2
-        loadingbar.labelText = 'Reading DICOM header...'
-        slicer.app.processEvents()
-        lstFilesDCM = []
-        for dirName, subdirList, fileList in os.walk(dir):
-            for filename in fileList:
-                lstFilesDCM.append(os.path.join(dirName, filename))
-        RefDs = dicom.read_file(lstFilesDCM[0])
-        if RefDs.InPlanePhaseEncodingDirection == 'COL':
-            phase_encoding_direction = 'AP '
-        elif RefDs.InPlanePhaseEncodingDirection == 'ROW':
-            phase_encoding_direction = 'LR '
+    def preproc(self, dir, check_denoising, check_gibbs, check_preproc, mask, loadingbar, nifti_path, bval_path,
+                bvec_path):
+        if dir:
+            loadingbar.value = 2
+            loadingbar.labelText = 'Reading DICOM header...'
+            slicer.app.processEvents()
+            lstFilesDCM = []
+            for dirName, subdirList, fileList in os.walk(dir):
+                for filename in fileList:
+                    lstFilesDCM.append(os.path.join(dirName, filename))
+            RefDs = dicom.read_file(lstFilesDCM[0])
+            if RefDs.InPlanePhaseEncodingDirection == 'COL':
+                phase_encoding_direction = 'AP '
+            elif RefDs.InPlanePhaseEncodingDirection == 'ROW':
+                phase_encoding_direction = 'LR '
+            else:
+                phase_encoding_direction = 'AP '
+
+            try:
+                diff_dir = RefDs[0x0019, 0x10e0].value
+                diff_dir = int(diff_dir)
+            except:
+                diff_dir = 25
+
+            win_size = 2
+            while win_size ** 3 < diff_dir:
+                win_size += 1
+            win_size = round_down_to_odd(win_size)
+            win_size = str(win_size)
+
+            if check_denoising:
+                loadingbar.value = 3
+                loadingbar.labelText = 'Noise Estimation...'
+                slicer.app.processEvents()
+                if mask:
+                    pipe('dwidenoise -force ' + dir + ' ' + os.path.join(self.tmp,
+                                                                         'd.mif') + ' -extent ' + win_size + ',' + \
+                         win_size + ',' + win_size + ' -mask ' + mask,
+                         True, self.my_env)
+                else:
+                    pipe('dwidenoise -force ' + dir + ' ' + os.path.join(self.tmp, 'd.mif' + ' -extent ' + win_size),
+                         True,
+                         self.my_env)
         else:
             phase_encoding_direction = 'AP '
+            with open(bval_path) as handle:
+                count = handle.read().split(' ')
+            diff_dir = len(count)
 
-        try:
-            diff_dir = RefDs[0x0019, 0x10e0].value
-            diff_dir = int(diff_dir)
-        except:
-            diff_dir = 25
+            win_size = 2
+            while win_size ** 3 < diff_dir:
+                win_size += 1
+            win_size = round_down_to_odd(win_size)
+            win_size = str(win_size)
 
-        win_size = 2
-        while win_size ** 3 < diff_dir:
-            win_size += 1
-        win_size = round_down_to_odd(win_size)
-        win_size = str(win_size)
+            if check_denoising:
+                loadingbar.value = 3
+                loadingbar.labelText = 'Noise Estimation...'
+                slicer.app.processEvents()
+                if mask:
+                    pipe('mrconvert -force ' + nifti_path + ' ' + os.path.join(self.tmp, 'd.mif') +
+                         ' -fslgrad ' + bvec_path + ' ' + bval_path, True, self.my_env)
+                    pipe('dwidenoise -force ' + os.path.join(self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp,
+                                                                                                     'd.mif') + ' -extent ' + win_size + ',' + \
+                         win_size + ',' + win_size + ' -mask ' + mask,
+                         True, self.my_env)
+                else:
+                    pipe('mrconvert -force ' + nifti_path + ' ' + os.path.join(self.tmp, 'd.mif') +
+                         ' -fslgrad ' + bvec_path + ' ' + bval_path, True, self.my_env)
+                    pipe(
+                        'dwidenoise -force ' + os.path.join(self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp,
+                                                                                                    'd.mif' + ' -extent ' + win_size),
+                        True,
+                        self.my_env)
 
-        loadingbar.value = 3
-        loadingbar.labelText = 'Noise Estimation...'
-        slicer.app.processEvents()
-        if check_denoising:
-            if mask:
-                pipe('dwidenoise -force ' + dir + ' ' + os.path.join(self.tmp, 'd.mif' + ' -extent ' + win_size + ',' + \
-                                                                     win_size + ',' + win_size + ' -mask ' + mask),
-                     True, self.my_env)
-            else:
-                pipe('dwidenoise -force ' + dir + ' ' + os.path.join(self.tmp, 'd.mif' + ' -extent ' + win_size), True,
-                     self.my_env)
-        loadingbar.value = 4
-        loadingbar.labelText = 'Gibbs Artifact Removal...'
-        slicer.app.processEvents()
         if check_gibbs:
+            loadingbar.value = 4
+            loadingbar.labelText = 'Gibbs Artifact Removal...'
+            slicer.app.processEvents()
             if check_denoising:
                 pipe('mrdegibbs  -force ' + os.path.join(self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp, 'g.mif'),
                      True,
                      self.my_env)
             else:
                 pipe('mrdegibbs -force ' + dir + ' ' + os.path.join(self.tmp, 'g.mif'), True, self.my_env)
-        loadingbar.value = 5
-        loadingbar.labelText = 'Motion and Eddy Currents Correction...'
-        slicer.app.processEvents()
+
         if check_preproc:
+            loadingbar.value = 5
+            loadingbar.labelText = 'Motion and Eddy Currents Correction...'
+            slicer.app.processEvents()
             num_cores = str(cpu_count())
             if check_gibbs:
                 pipe(
@@ -683,28 +878,43 @@ class DiffusionPelvisLogic:
 
         return nii_path, bval_path, bvec_path
 
-    def register(self, data_path, bvals, bvecs, t2_path, mask_t2, mask_b0):
+    def register(self, data_path, bvals, bvecs, t2_path, mask_t2, mask_b0, affine, elastic, low, med):
         b0_path = os.path.join(self.tmp, 'b0.nii')
 
         with cd(self.tmp):
             pipe('dwiextract -force ' + data_path + ' -bzero ' + b0_path + '  -fslgrad ' + bvecs + ' ' + bvals, True,
                  self.my_env)
-            cmd = 'antsRegistration --verbose 1 --dimensionality 3 --float 0 --output \[out,b0Warped.nii,coroT2Warped.nii\] --interpolation Linear --use-histogram-matching 1 --winsorize-image-intensities \[0.005,0.995\] --initial-moving-transform \[' + t2_path + ',' + b0_path + ',1\] --transform Rigid\[0.1\] --metric MI\[' + t2_path + ',' + b0_path + ',1,32,Regular,0.25\] --convergence \[1000x500x250x100,1e-6,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox --transform Affine\[0.1\] --metric MI\[' + t2_path + ',' + b0_path + ',1,32,Regular,0.25\] --convergence \[1000x500x250x100,1e-6,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox --transform SyN\[0.1,3,0\] --metric CC\[' + t2_path + ',' + b0_path + ',1,4\] --convergence \[100x70x50x20,1e-6,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox'
+            cmd = 'antsRegistration --verbose 1 --dimensionality 3 --float 0 --output \[out,b0Warped.nii,coroT2Warped.nii\] --interpolation Linear --initial-moving-transform \[' + t2_path + ',' + b0_path + ',1\] --transform Rigid\[0.1\] --metric MI\[' + t2_path + ',' + b0_path + ',1,32,Regular,0.25\] --convergence \[1000x500x250x100,1e-6,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox --use-histogram-matching 1 --winsorize-image-intensities \[0.005,0.995\] '
+            if affine:
+                cmd += ' --transform Affine\[0.1\] --metric MI\[' + t2_path + ',' + b0_path + ',1,32,Regular,0.25\] --convergence \[1000x500x250x100,1e-6,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox --use-histogram-matching 1'
+            if elastic:
+                if low:
+                    cmd += ' --transform SyN\[0.1,3,0\] --metric CC\[' + t2_path + ',' + b0_path + ',1,4\] --convergence \[100x70x50x20,1e-5,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox --use-estimate-learning-rate-once 1 --use-histogram-matching 1 --winsorize-image-intensities \[0.005,0.995\] '
+                elif med:
+                    cmd += ' --transform SyN\[0.1,3,0\] --metric CC\[' + t2_path + ',' + b0_path + ',1,4\] --convergence \[100x70x50x20,1e-6,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox --use-estimate-learning-rate-once 1 --use-histogram-matching 1 --winsorize-image-intensities \[0.005,0.995\] '
+                else:
+                    cmd += ' --transform SyN\[0.2,3,0\] --metric CC\[' + t2_path + ',' + b0_path + ',1,4\] --convergence \[100x70x50x20,1e-6,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox --use-estimate-learning-rate-once 1 --use-histogram-matching 1 --winsorize-image-intensities \[0.005,0.995\] '
             if mask_t2 and mask_b0:
                 cmd += ' --masks \[' + mask_t2 + ', ' + mask_b0 + '\]'
+
             pipe(cmd, True)
 
             pipe('warpinit -force ' + data_path + ' identity_warp\[\].nii', True, self.my_env)
 
+            if elastic:
+                pipe(
+                    'for i in {0..2}; do; antsApplyTransforms -d 3 -i identity_warp${i}.nii -o mrtrix_warp${i}.nii -r ' + t2_path + ' -t out1Warp.nii out0GenericAffine.mat; done;',
+                    True, self.my_env)
+                pipe('warpcorrect -force mrtrix_warp\[\].nii mrtrix_warp_corrected.mif', True, self.my_env)
+            else:
+                cmd = 'for i in {0..2}; do; antsApplyTransforms -d 3 -i identity_warp${i}.nii -o mrtrix_warp${i}.nii -r ' + t2_path + ' -t out0GenericAffine.mat -f 123456789; mrcalc mrtrix_warp${i}.nii 123456789 -eq nan mrtrix_warp${i}.nii -if mrtrix_warp${i}.mif -force && rm mrtrix_warp${i}.nii; done;'
+                pipe(cmd, True, self.my_env)
+                pipe('warpcorrect -force mrtrix_warp\[\].mif mrtrix_warp_corrected.mif', True, self.my_env)
+
             pipe(
-                'for i in {0..2}; do; WarpImageMultiTransform 3 identity_warp${i}.nii mrtrix_warp${i}.nii -R ' + b0_path + ' out1Warp.nii out0GenericAffine.mat; done;',
-                True, self.my_env)
-
-            pipe('warpcorrect -force mrtrix_warp\[\].nii mrtrix_warp_corrected.mif', True, self.my_env)
-
-            pipe('mrtransform -force -stride -1,2,3,4 ' + data_path + ' -warp mrtrix_warp_corrected.mif DWIWarped.nii',
-                 True,
-                 self.my_env)
+                'mrtransform -force -stride -1,2,3,4 ' + data_path + ' -warp mrtrix_warp_corrected.mif DWIWarped.nii -datatype int16 ',
+                True,
+                self.my_env)
 
         return os.path.join(self.tmp, 'DWIWarped.nii')
 
