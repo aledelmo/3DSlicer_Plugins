@@ -4,6 +4,7 @@ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 # import ModEditorLib
 import logging
+from builtins import range
 
 
 #
@@ -13,7 +14,7 @@ class BladderSegmentation:
 
     def __init__(self, parent):
         parent.title = "Bladder"  # TODO make this more human readable by adding spaces
-        parent.categories = ["Pelvic Segmentation"]
+        parent.categories = ['IMAG2', "Pelvic Segmentation"]
         parent.dependencies = []
         parent.contributors = ["De Masi Luca (Telecom ParisTech)"]
         parent.helpText = string.Template("""
@@ -345,7 +346,6 @@ class BladderSegmentationLogic:
         displayNode = volumeNode.GetDisplayNode()
         displayNode.SetAndObserveColorNodeID('vtkMRMLColorTableNodeFileGenericAnatomyColors.txt')
 
-
         # LucaDMS - It built the 3D model of the segmentation using the modelmaker module
         modelParams = {}
         modelParams['Name'] = inputVolume.GetName() + '-Bladder'
@@ -367,7 +367,7 @@ class BladderSegmentationLogic:
         # - make a new hierarchy node if needed
         numNodes = slicer.mrmlScene.GetNumberOfNodesByClass("vtkMRMLModelHierarchyNode")
         outHierarchy = None
-        for n in xrange(numNodes):
+        for n in range(numNodes):
             node = slicer.mrmlScene.GetNthNodeByClass(n, "vtkMRMLModelHierarchyNode")
             if node.GetName() == "Bladder Models":
                 outHierarchy = node
