@@ -317,6 +317,16 @@ class TractographyPelvisWidget:
 
         tractoFormLayout.addRow('Maximum Fiber Length', self.sliderMaxlength)
 
+        self.sliderMaxangle = ctk.ctkSliderWidget()
+        self.sliderMaxangle.decimals = 1
+        self.sliderMaxangle.minimum = 1.
+        self.sliderMaxangle.maximum = 90.
+        self.sliderMaxangle.singleStep = 0.5
+        self.sliderMaxangle.value = 5.
+        self.sliderMaxangle.spinBoxVisible = True
+
+        tractoFormLayout.addRow('Maximum Admissible Angle', self.sliderMaxangle)
+
         self.combo_tract = qt.QComboBox()
         self.combo_tract.insertItem(0, 'DTI - Deterministic - FACT')
         self.combo_tract.insertItem(1, 'CSD - Deterministic - SD_STREAM')
@@ -448,8 +458,8 @@ class TractographyPelvisWidget:
                 excl_path = None
 
             path = self.logic.tracts(self.sliderMinlength.value, self.sliderMaxlength.value,
-                                     self.sliderCutoff.value, self.sliderSeeds.value, data_path, mask_path,
-                                     seeds_path,
+                                     self.sliderCutoff.value, self.sliderSeeds.value, self.sliderMaxangle.value,
+                                     data_path, mask_path, seeds_path,
                                      excl_path, bvec_path, bval_path, self.combo_tract.currentIndex)
 
             nodename = self.tractoNode.GetName()
@@ -565,7 +575,7 @@ class TractographyPelvisLogic:
 
         return sacrum_convex.astype(np.int16)
 
-    def tracts(self, Minlength, Maxlength, Cutoff, Seeds_T, data_path, Mask, Seeds, ROE, fbvec, fbval, mode):
+    def tracts(self, Minlength, Maxlength, Cutoff, Seeds_T, Angle, data_path, Mask, Seeds, ROE, fbvec, fbval, mode):
         if mode == 0:
             string = 'dwi2tensor -force ' + data_path + ' ' + os.path.join(self.tmp,
                                                                            'DTI.mif') + ' -fslgrad ' + fbvec + ' ' + fbval
@@ -580,7 +590,7 @@ class TractographyPelvisLogic:
             string = 'tckgen -force ' + os.path.join(self.tmp, 'eigen.mif') + ' ' + os.path.join(self.tmp,
                                                                                                  'tracto.tck') + ' -algorithm FACT -cutoff ' + str(
                 Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + ' -minlength ' + str(Minlength) + \
-                     ' -maxlength ' + str(Maxlength) + ' -seed_random_per_voxel ' + Seeds + ' 3 '
+                     ' -maxlength ' + str(Maxlength) + ' -seed_random_per_voxel ' + Seeds + ' 3 ' + ' -angle ' + str(Angle)
             if Mask:
                 string = string + ' -mask ' + Mask
             if ROE:
