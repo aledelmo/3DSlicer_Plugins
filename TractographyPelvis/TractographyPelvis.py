@@ -49,7 +49,7 @@ def vtkmatrix_to_numpy(matrix):
 
 def pipe(cmd, verbose=False, my_env=os.environ):
     if verbose:
-        print 'Processing command: ' + str(cmd)
+        print('Processing command: ' + str(cmd))
 
     slicer.app.processEvents()
     return call(cmd, shell=True, stdin=None, stdout=None, stderr=None, executable="/usr/local/bin/zsh", env=my_env)
@@ -297,26 +297,6 @@ class TractographyPelvisWidget:
 
         tractoFormLayout.addRow('Cutoff (FA)', self.sliderCutoff)
 
-        self.sliderMinlength = ctk.ctkSliderWidget()
-        self.sliderMinlength.decimals = 0
-        self.sliderMinlength.minimum = 1.
-        self.sliderMinlength.maximum = 800.
-        self.sliderMinlength.singleStep = 1.
-        self.sliderMinlength.value = 5.
-        self.sliderMinlength.spinBoxVisible = True
-
-        tractoFormLayout.addRow('Minimum Fiber Length', self.sliderMinlength)
-
-        self.sliderMaxlength = ctk.ctkSliderWidget()
-        self.sliderMaxlength.decimals = 0
-        self.sliderMaxlength.minimum = 1.
-        self.sliderMaxlength.maximum = 800.
-        self.sliderMaxlength.singleStep = 1.
-        self.sliderMaxlength.value = 200.
-        self.sliderMaxlength.spinBoxVisible = True
-
-        tractoFormLayout.addRow('Maximum Fiber Length', self.sliderMaxlength)
-
         self.sliderMaxangle = ctk.ctkSliderWidget()
         self.sliderMaxangle.decimals = 1
         self.sliderMaxangle.minimum = 1.
@@ -325,7 +305,12 @@ class TractographyPelvisWidget:
         self.sliderMaxangle.value = 5.
         self.sliderMaxangle.spinBoxVisible = True
 
-        tractoFormLayout.addRow('Maximum Admissible Angle', self.sliderMaxangle)
+        tractoFormLayout.addRow('Admissible Angle', self.sliderMaxangle)
+
+        self.sliderLength = ctk.ctkRangeWidget()
+        self.sliderLength.setRange(1, 800)
+        self.sliderLength.setValues(5, 200)
+        tractoFormLayout.addRow('Length', self.sliderLength)
 
         self.combo_tract = qt.QComboBox()
         self.combo_tract.insertItem(0, 'DTI - Deterministic - FACT')
@@ -339,6 +324,8 @@ class TractographyPelvisWidget:
 
         self.tractoButton.connect('clicked(bool)', self.ontractoButton)
         tractoFormLayout.addRow(self.tractoButton)
+
+        self.layout.addStretch(1)
 
         if self.developerMode:
 
@@ -376,8 +363,6 @@ class TractographyPelvisWidget:
 
             reloadFormLayout.addWidget(
                 createHLayout([self.reloadButton, self.reloadAndTestButton, self.editSourceButton, self.restartButton]))
-
-        self.layout.addStretch(1)
 
     def ondwiSelect(self):
         self.dwiNode = self.dwiSelector.currentNode()
@@ -423,7 +408,7 @@ class TractographyPelvisWidget:
             self.autoseedsNode.SetIJKToRASMatrix(self.ijkToRas)
 
     def ontractoButton(self):
-        if self.dwiNode and self.sliderSeeds.value > self.sliderCutoff.value and self.sliderMaxlength.value > self.sliderMinlength.value:
+        if self.dwiNode and self.sliderSeeds.value > self.sliderCutoff.value:
             data_path = os.path.join(self.logic.tmp, 'data.nii')
             bval_path = os.path.join(self.logic.tmp, 'data.bval')
             bvec_path = os.path.join(self.logic.tmp, 'data.bvec')
@@ -457,7 +442,7 @@ class TractographyPelvisWidget:
             else:
                 excl_path = None
 
-            path = self.logic.tracts(self.sliderMinlength.value, self.sliderMaxlength.value,
+            path = self.logic.tracts(self.sliderLength.minimumValue, self.sliderLength.maximumValue,
                                      self.sliderCutoff.value, self.sliderSeeds.value, self.sliderMaxangle.value,
                                      data_path, mask_path, seeds_path,
                                      excl_path, bvec_path, bval_path, self.combo_tract.currentIndex)
@@ -484,7 +469,7 @@ class TractographyPelvisWidget:
             self.onReload()
             test = slicer.selfTests[self.moduleName]
             test()
-        except Exception, e:
+        except Exception:
             import traceback
             traceback.print_exc()
             errorMessage = "Reload and Test: Exception!\n\n" + str(e) + "\n\nSee Python Console for Stack Trace"
@@ -590,7 +575,8 @@ class TractographyPelvisLogic:
             string = 'tckgen -force ' + os.path.join(self.tmp, 'eigen.mif') + ' ' + os.path.join(self.tmp,
                                                                                                  'tracto.tck') + ' -algorithm FACT -cutoff ' + str(
                 Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + ' -minlength ' + str(Minlength) + \
-                     ' -maxlength ' + str(Maxlength) + ' -seed_random_per_voxel ' + Seeds + ' 3 ' + ' -angle ' + str(Angle)
+                     ' -maxlength ' + str(Maxlength) + ' -seed_random_per_voxel ' + Seeds + ' 3 ' + ' -angle ' + str(
+                Angle)
             if Mask:
                 string = string + ' -mask ' + Mask
             if ROE:
