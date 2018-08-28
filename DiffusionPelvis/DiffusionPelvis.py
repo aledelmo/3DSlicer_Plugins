@@ -23,7 +23,7 @@ __email__ = 'delmonte.ale92@gmail.com'
 
 def pipe(cmd, verbose=False, my_env=os.environ):
     if verbose:
-        print 'Processing command: ' + str(cmd)
+        print('Processing command: ' + str(cmd))
 
     slicer.app.processEvents()
     return call(cmd, shell=True, stdin=None, stdout=None, stderr=None, executable="/usr/local/bin/zsh", env=my_env)
@@ -131,15 +131,11 @@ class DiffusionPelvisWidget:
         grid_layout.setColumnStretch(2, 1)
         grid_layout.setColumnStretch(3, 1)
 
-        self.dialogfolder = qt.QFileDialog()
-        self.dialogfolder.FileMode(2)
-        self.dialogfolder.setFileMode(4)
-        self.dialogfolderbutton = qt.QPushButton('Select DICOM Directory')
-        self.dialogfolderbutton.enabled = True
+        self.dialogfolderbutton = ctk.ctkDirectoryButton()
 
         self.dir = None
 
-        self.dialogfolderbutton.connect('clicked(bool)', self.onApplydialogfolderbutton)
+        self.dialogfolderbutton.connect('directoryChanged(const QString&)', self.onApplydialogfolderbutton)
 
         textwidget = qt.QLabel()
         textwidget.setText('Input DICOM DWI: ')
@@ -429,6 +425,8 @@ class DiffusionPelvisWidget:
         self.measureButton.connect('clicked(bool)', self.onmeasureButton)
         measuresFormLayout.addRow(self.measureButton)
 
+        self.layout.addStretch(1)
+
         if self.developerMode:
 
             def createHLayout(elements):
@@ -466,11 +464,8 @@ class DiffusionPelvisWidget:
             reloadFormLayout.addWidget(
                 createHLayout([self.reloadButton, self.reloadAndTestButton, self.editSourceButton, self.restartButton]))
 
-        self.layout.addStretch(1)
-
     def onApplydialogfolderbutton(self):
-        self.dir = self.dialogfolder.getExistingDirectory()
-        self.dialogfolderbutton.setText(self.dir)
+        self.dir = self.dialogfolderbutton.directory
 
     def onmaskSelect(self):
         self.maskNode = self.maskSelector.currentNode()
@@ -675,7 +670,7 @@ class DiffusionPelvisWidget:
             self.onReload()
             test = slicer.selfTests[self.moduleName]
             test()
-        except Exception, e:
+        except Exception:
             import traceback
             traceback.print_exc()
             errorMessage = "Reload and Test: Exception!\n\n" + str(e) + "\n\nSee Python Console for Stack Trace"
