@@ -52,7 +52,10 @@ def pipe(cmd, verbose=False, my_env=os.environ):
         print('Processing command: ' + str(cmd))
 
     slicer.app.processEvents()
-    return call(cmd, shell=True, stdin=None, stdout=None, stderr=None, executable="/usr/local/bin/zsh", env=my_env)
+    try:
+        return call(cmd, shell=True, stdin=None, stdout=None, stderr=None, executable="/usr/local/bin/zsh", env=my_env)
+    except:
+        return call(cmd, shell=True, stdin=None, stdout=None, stderr=None, executable="/bin/bash", env=my_env)
 
 
 class TractographyPelvis:
@@ -162,6 +165,21 @@ class TractographyPelvisWidget:
 
         self.faSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onfaSelect)
         seedsFormLayout.addRow('FA map: ', self.faSelector)
+
+        self.markups_selector = slicer.qSlicerSimpleMarkupsWidget()
+        self.markups_selector.objectName = 'seedFiducialsNodeSelector'
+        self.markups_selector = slicer.qSlicerSimpleMarkupsWidget()
+        self.markups_selector.objectName = 'seedFiducialsNodeSelector'
+        self.markups_selector.toolTip = "Select a fiducial to use as the origin of the algorithm."
+        self.markups_selector.setNodeBaseName("OriginSeeds")
+        self.markups_selector.defaultNodeColor = qt.QColor(202, 169, 250)
+        # self.markups_selector.tableWidget().hide()
+        self.markups_selector.maximumHeight = 150
+        self.markups_selector.markupsSelectorComboBox().noneEnabled = False
+        # self.markups_selector.markupsPlaceWidget().placeMultipleMarkups = slicer.qSlicerMarkupsPlaceWidget.ForcePlaceSingleMarkup
+        seedsFormLayout.addRow("Initial points:", self.markups_selector)
+        self.parent.connect('mrmlSceneChanged(vtkMRMLScene*)',
+                            self.markups_selector, 'setMRMLScene(vtkMRMLScene*)')
 
         self.autoseedsSelector = slicer.qMRMLNodeComboBox()
         self.autoseedsSelector.nodeTypes = ['vtkMRMLLabelMapVolumeNode']
@@ -402,10 +420,18 @@ class TractographyPelvisWidget:
         self.autoseedsNode = self.autoseedsSelector.currentNode()
 
     def onautoseedsButton(self):
+        current_seeds_node = self.markups_selector.currentNode()
+        fid_list = []
+        for n in range(current_seeds_node.GetNumberOfFiducials()):
+            current = [0, 0, 0]
+            current_seeds_node.GetNthFiducialPosition(n, current)
+            fid_list.append(current)
+        print fid_list
+
         if self.sacrumNode.any() and self.faNode.any():
             seeds = self.logic.autoseeds(self.sacrumNode, self.faNode, self.sacrum_affine, self.fa_affine)
-            slicer.util.updateVolumeFromArray(self.autoseedsNode, np.swapaxes(seeds, 0, 2))
-            self.autoseedsNode.SetIJKToRASMatrix(self.ijkToRas)
+        slicer.util.updateVolumeFromArray(self.autoseedsNode, np.swapaxes(seeds, 0, 2))
+        self.autoseedsNode.SetIJKToRASMatrix(self.ijkToRas)
 
     def ontractoButton(self):
         if self.dwiNode and self.sliderSeeds.value > self.sliderCutoff.value:
