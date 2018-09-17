@@ -16,7 +16,7 @@ except ImportError:
 from subprocess import (call)
 from builtins import int
 import ctk
-# import cv2
+
 import numpy as np
 import numpy.linalg as npl
 import qt
@@ -31,13 +31,6 @@ from vtk.util import numpy_support as ns
 
 __author__ = 'Alessandro Delmonte'
 __email__ = 'delmonte.ale92@gmail.com'
-
-
-# def pickle_open(path):
-#     with open(path, 'rb') as handle:
-#         env = pickle.load(handle)
-#         return env
-
 
 def vtkmatrix_to_numpy(matrix):
     m = np.ones((4, 4))
@@ -129,6 +122,8 @@ class TractographyPelvisWidget:
 
         seedsCollapsibleButton = ctk.ctkCollapsibleButton()
         seedsCollapsibleButton.text = 'Automatic Seeds generation'
+
+        seedsCollapsibleButton.collapsed = True
 
         self.layout.addWidget(seedsCollapsibleButton)
 
@@ -257,6 +252,13 @@ class TractographyPelvisWidget:
         self.tractoSelector.connect('nodeActivated(vtkMRMLNode*)', self.ontractoSelect)
         tractoFormLayout.addRow('Output Fiber Bundle: ', self.tractoSelector)
 
+        self.tractoButton = qt.QPushButton('Compute')
+        self.tractoButton.toolTip = 'Run the tractography algorithm.'
+        self.tractoButton.enabled = True
+
+        self.tractoButton.connect('clicked(bool)', self.ontractoButton)
+        tractoFormLayout.addRow(self.tractoButton)
+
         line = qt.QFrame()
         line.setFrameShape(qt.QFrame().HLine)
         line.setFrameShadow(qt.QFrame().Sunken)
@@ -336,12 +338,45 @@ class TractographyPelvisWidget:
         self.combo_tract.insertItem(2, 'CSD - Probabilistic - iFOD')
         tractoFormLayout.addRow('Algorithm', self.combo_tract)
 
-        self.tractoButton = qt.QPushButton('Compute')
-        self.tractoButton.toolTip = 'Run the tractography algorithm.'
-        self.tractoButton.enabled = True
+        line2 = qt.QFrame()
+        line2.setFrameShape(qt.QFrame().HLine)
+        line2.setFrameShadow(qt.QFrame().Sunken)
+        line2.setStyleSheet("min-height: 24px")
+        tractoFormLayout.addRow(line2)
 
-        self.tractoButton.connect('clicked(bool)', self.ontractoButton)
-        tractoFormLayout.addRow(self.tractoButton)
+        groupbox = qt.QGroupBox()
+        groupbox.setTitle('Whole Pelvis Tractogram')
+        grid_layout = qt.QGridLayout(groupbox)
+        grid_layout.setColumnStretch(1, 1)
+        grid_layout.setColumnStretch(2, 1)
+        grid_layout.setColumnStretch(3, 1)
+
+        textwidget_info = qt.QLabel()
+        textwidget_info.setText(
+            'Slicer can not manage large tractogram files. In the situation you desire to compute a whole-pelvis'
+            ' tractography,\nplease check the following box and select a vtk output file. The result will be saved directly'
+            ' on the disk.\n')
+        tractoFormLayout.addRow(textwidget_info)
+
+        self.output_file_selector = ctk.ctkPathLineEdit()
+        self.output_file_selector.filters = ctk.ctkPathLineEdit.Files | ctk.ctkPathLineEdit.Writable | \
+                                            ctk.ctkPathLineEdit.Hidden
+        self.output_file_selector.addCurrentPathToHistory()
+
+        textwidget = qt.QLabel()
+        textwidget.setText('Use Whole: ')
+        grid_layout.addWidget(textwidget, 0, 0, 0)
+        self.radio_whole = qt.QCheckBox()
+        self.radio_whole.setChecked(False)
+        grid_layout.addWidget(self.radio_whole, 0, 1, 0)
+
+        textwidget2 = qt.QLabel()
+        textwidget2.setText('File Path (VTK): ')
+        grid_layout.addWidget(textwidget2, 1, 0, 0)
+        grid_layout.addWidget(self.output_file_selector, 1, 1, 1, 3)
+
+        groupbox.setLayout(grid_layout)
+        tractoFormLayout.addRow(groupbox)
 
         self.layout.addStretch(1)
 
@@ -434,7 +469,8 @@ class TractographyPelvisWidget:
         self.autoseedsNode.SetIJKToRASMatrix(self.ijkToRas)
 
     def ontractoButton(self):
-        if self.dwiNode and self.sliderSeeds.value > self.sliderCutoff.value:
+        if self.dwiNode and self.sliderSeeds.value > self.sliderCutoff.value and (
+                self.tractoNode or self.radio_whole.isChecked()):
             data_path = os.path.join(self.logic.tmp, 'data.nii')
             bval_path = os.path.join(self.logic.tmp, 'data.bval')
             bvec_path = os.path.join(self.logic.tmp, 'data.bvec')
@@ -473,10 +509,15 @@ class TractographyPelvisWidget:
                                      data_path, mask_path, seeds_path,
                                      excl_path, bvec_path, bval_path, self.combo_tract.currentIndex)
 
-            nodename = self.tractoNode.GetName()
-            slicer.mrmlScene.RemoveNode(self.tractoNode)
-            _, tractogramNode = slicer.util.loadFiberBundle(path, returnNode=True)
-            tractogramNode.SetName(nodename)
+            if not self.radio_whole.isChecked():
+                nodename = self.tractoNode.GetName()
+                slicer.mrmlScene.RemoveNode(self.tractoNode)
+                _, tractogramNode = slicer.util.loadFiberBundle(path, returnNode=True)
+                tractogramNode.SetName(nodename)
+            else:
+                self.output_file_selector.addCurrentPathToHistory()
+                new_path = self.output_file_selector.currentPath.encode('utf-8')
+                shutil.move(path, new_path)
 
             self.cleanup()
 
@@ -531,7 +572,6 @@ class TractographyPelvisLogic:
             pass
 
         self.tmp = tempfile.mkdtemp()
-        # self.my_env = pickle_open('/Applications/Slicer.app/Contents/environ.pickle')
         self.my_env = slicer.util.startupEnvironment()
 
     def __del__(self):
