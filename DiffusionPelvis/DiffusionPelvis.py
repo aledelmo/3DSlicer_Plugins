@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 from contextlib import contextmanager
-from subprocess import (call)
+from subprocess import call
 
 import ctk
 import dicom
@@ -26,17 +26,8 @@ def pipe(cmd, verbose=False, my_env=os.environ):
         print('Processing command: ' + str(cmd))
 
     slicer.app.processEvents()
-    try:
-        return call(cmd, shell=True, stdin=None, stdout=None, stderr=None, executable="/usr/local/bin/zsh", env=my_env)
-    except:
-        return call(cmd, shell=True, stdin=None, stdout=None, stderr=None, executable="/bin/bash", env=my_env)
-
-
-# def pickle_open(path):
-#     with open(path, 'rb') as handle:
-#         env = pickle.load(handle)
-#         return env
-
+    return call(cmd, shell=True, stdin=None, stdout=None, stderr=None, executable=os.path.abspath(os.environ['SHELL']),
+                env=my_env)
 
 @contextmanager
 def cd(newdir):
@@ -713,7 +704,6 @@ class DiffusionPelvisLogic:
             pass
 
         self.tmp = tempfile.mkdtemp()
-        # self.my_env = pickle_open('/Applications/Slicer.app/Contents/environ.pickle')
         self.my_env = slicer.util.startupEnvironment()
 
     @property
@@ -744,12 +734,15 @@ class DiffusionPelvisLogic:
                 for filename in fileList:
                     lstFilesDCM.append(os.path.join(dirName, filename))
             RefDs = dicom.read_file(lstFilesDCM[0])
-            if RefDs.InPlanePhaseEncodingDirection == 'COL':
-                phase_encoding_direction = 'AP '
-            elif RefDs.InPlanePhaseEncodingDirection == 'ROW':
-                phase_encoding_direction = 'LR '
-            else:
-                phase_encoding_direction = 'AP '
+            try:
+                if RefDs.InPlanePhaseEncodingDirection == 'COL':
+                    phase_encoding_direction = 'AP '
+                elif RefDs.InPlanePhaseEncodingDirection == 'ROW':
+                    phase_encoding_direction = 'LR '
+                else:
+                    phase_encoding_direction = 'AP '
+            except:
+                phase_encoding_direction = 'AP'
 
             try:
                 diff_dir = RefDs[0x0019, 0x10e0].value
@@ -760,7 +753,7 @@ class DiffusionPelvisLogic:
             win_size = 2
             while win_size ** 3 < diff_dir:
                 win_size += 1
-            win_size = round_down_to_odd(win_size)
+            win_size = max(round_down_to_odd(win_size), 3)
             win_size = str(win_size)
 
             if check_denoising:
@@ -776,6 +769,34 @@ class DiffusionPelvisLogic:
                     pipe('dwidenoise -force ' + dir + ' ' + os.path.join(self.tmp, 'd.mif' + ' -extent ' + win_size),
                          True,
                          self.my_env)
+            if check_gibbs:
+                loadingbar.value = 4
+                loadingbar.labelText = 'Gibbs Artifact Removal...'
+                slicer.app.processEvents()
+                if check_denoising:
+                    pipe('mrdegibbs  -force ' + os.path.join(self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp, 'g.mif'),
+                         True,
+                         self.my_env)
+                else:
+                    pipe('mrdegibbs -force ' + dir + ' ' + os.path.join(self.tmp, 'g.mif'), True, self.my_env)
+            if check_preproc:
+                loadingbar.value = 5
+                loadingbar.labelText = 'Motion and Eddy Currents Correction...'
+                slicer.app.processEvents()
+                num_cores = str(cpu_count())
+                if check_gibbs:
+                    pipe(
+                        'dwipreproc -force -nthreads ' + num_cores + ' -tempdir ' + self.tmp + ' -rpe_none -pe_dir ' + phase_encoding_direction + \
+                        os.path.join(self.tmp, 'g.mif') + ' ' + os.path.join(self.tmp, 'p.mif'), True, self.my_env)
+                elif check_denoising and not check_gibbs:
+                    pipe(
+                        'dwipreproc -force -nthreads ' + num_cores + ' -tempdir ' + self.tmp + ' -rpe_none -pe_dir ' + phase_encoding_direction + \
+                        os.path.join(self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp, 'p.mif'), True, self.my_env)
+                else:
+                    pipe(
+                        'dwipreproc -force -nthreads ' + num_cores + ' -tempdir ' + self.tmp + ' -rpe_none -pe_dir ' + phase_encoding_direction + \
+                        dir + ' ' + os.path.join(self.tmp, 'p.mif'), True, self.my_env)
+
         else:
             phase_encoding_direction = 'AP '
             with open(bval_path) as handle:
@@ -785,7 +806,7 @@ class DiffusionPelvisLogic:
             win_size = 2
             while win_size ** 3 < diff_dir:
                 win_size += 1
-            win_size = round_down_to_odd(win_size)
+            win_size = max(round_down_to_odd(win_size),3)
             win_size = str(win_size)
 
             if check_denoising:
@@ -807,35 +828,36 @@ class DiffusionPelvisLogic:
                                                                                                     'd.mif' + ' -extent ' + win_size),
                         True,
                         self.my_env)
-
-        if check_gibbs:
-            loadingbar.value = 4
-            loadingbar.labelText = 'Gibbs Artifact Removal...'
-            slicer.app.processEvents()
-            if check_denoising:
-                pipe('mrdegibbs  -force ' + os.path.join(self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp, 'g.mif'),
-                     True,
-                     self.my_env)
-            else:
-                pipe('mrdegibbs -force ' + dir + ' ' + os.path.join(self.tmp, 'g.mif'), True, self.my_env)
-
-        if check_preproc:
-            loadingbar.value = 5
-            loadingbar.labelText = 'Motion and Eddy Currents Correction...'
-            slicer.app.processEvents()
-            num_cores = str(cpu_count())
             if check_gibbs:
-                pipe(
-                    'dwipreproc -force -nthreads ' + num_cores + ' -tempdir ' + self.tmp + ' -rpe_none -pe_dir ' + phase_encoding_direction + \
-                    os.path.join(self.tmp, 'g.mif') + ' ' + os.path.join(self.tmp, 'p.mif'), True, self.my_env)
-            elif check_denoising:
-                pipe(
-                    'dwipreproc -force -nthreads ' + num_cores + ' -tempdir ' + self.tmp + ' -rpe_none -pe_dir ' + phase_encoding_direction + \
-                    os.path.join(self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp, 'p.mif'), True, self.my_env)
-            else:
-                pipe(
-                    'dwipreproc -force -nthreads ' + num_cores + ' -tempdir ' + self.tmp + ' -rpe_none -pe_dir ' + phase_encoding_direction + \
-                    dir + ' ' + os.path.join(self.tmp, 'p.mif'), True, self.my_env)
+                loadingbar.value = 4
+                loadingbar.labelText = 'Gibbs Artifact Removal...'
+                slicer.app.processEvents()
+                if check_denoising:
+                    pipe('mrdegibbs  -force ' + os.path.join(self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp, 'g.mif'),
+                         True,
+                         self.my_env)
+                else:
+                    pipe('mrdegibbs -force ' + nifti_path + ' ' + os.path.join(self.tmp,
+                                                                               'g.mif') + ' -fslgrad ' + bvec_path + ' ' + bval_path,
+                         True, self.my_env)
+            if check_preproc:
+                loadingbar.value = 5
+                loadingbar.labelText = 'Motion and Eddy Currents Correction...'
+                slicer.app.processEvents()
+                num_cores = str(cpu_count())
+                if check_gibbs:
+                    pipe(
+                        'dwipreproc -force -nthreads ' + num_cores + ' -tempdir ' + self.tmp + ' -rpe_none -pe_dir ' + phase_encoding_direction + \
+                        os.path.join(self.tmp, 'g.mif') + ' ' + os.path.join(self.tmp, 'p.mif'), True, self.my_env)
+                elif check_denoising and not check_gibbs:
+                    pipe(
+                        'dwipreproc -force -nthreads ' + num_cores + ' -tempdir ' + self.tmp + ' -rpe_none -pe_dir ' + phase_encoding_direction + \
+                        os.path.join(self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp, 'p.mif'), True, self.my_env)
+                else:
+                    pipe(
+                        'dwipreproc -force -nthreads ' + num_cores + ' -tempdir ' + self.tmp + ' -rpe_none -pe_dir ' + phase_encoding_direction + \
+                        nifti_path + ' ' + os.path.join(self.tmp, 'p.mif') + ' -fslgrad ' + bvec_path + ' ' + bval_path,
+                        True, self.my_env)
 
         loadingbar.value = 6
         loadingbar.labelText = 'Bias Field Correction...'
@@ -856,9 +878,15 @@ class DiffusionPelvisLogic:
                                                                                                       'r.mif'),
                 True, self.my_env)
         else:
-            pipe(
-                'dwibiascorrect -force -ants ' + dir + ' ' + os.path.join(self.tmp, 'r.mif'),
-                True, self.my_env)
+            if dir:
+                pipe(
+                    'dwibiascorrect -force -ants ' + dir + ' ' + os.path.join(self.tmp, 'r.mif'),
+                    True, self.my_env)
+            else:
+                pipe(
+                    'dwibiascorrect -force -ants ' + nifti_path + ' ' + os.path.join(self.tmp,
+                                                                                     'r.mif') + ' -fslgrad ' + bvec_path + ' ' + bval_path,
+                    True, self.my_env)
 
         loadingbar.value = 7
         loadingbar.labelText = 'Loading Corrected DWI...'
@@ -869,6 +897,7 @@ class DiffusionPelvisLogic:
         pipe('mrconvert -force  -stride -1,2,3,4 ' + os.path.join(self.tmp,
                                                                   'r.mif') + ' ' + nii_path + ' -export_grad_fsl ' + bvec_path + ' ' + bval_path,
              True, self.my_env)
+        print(win_size)
 
         loadingbar.value = 8
         loadingbar.labelText = ''
