@@ -652,6 +652,8 @@ class TractographyPelvisLogic:
         else:
             string = 'dwi2response tournier ' + data_path + ' ' + os.path.join(self.tmp,
                                                                                'response.txt') + ' -fslgrad ' + fbvec + ' ' + fbval
+            if Mask:
+                string = string + ' -mask ' + Mask
             pipe(string, True, self.my_env)
 
             string = 'dwi2fod csd ' + data_path + ' ' + os.path.join(self.tmp, 'response.txt') + ' ' + os.path.join(
