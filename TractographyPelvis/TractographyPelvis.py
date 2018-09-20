@@ -32,6 +32,7 @@ from vtk.util import numpy_support as ns
 __author__ = 'Alessandro Delmonte'
 __email__ = 'delmonte.ale92@gmail.com'
 
+
 def vtkmatrix_to_numpy(matrix):
     m = np.ones((4, 4))
     for i in range(4):
@@ -40,15 +41,15 @@ def vtkmatrix_to_numpy(matrix):
     return m
 
 
-def pipe(cmd, verbose=False, my_env=os.environ):
+def pipe(cmd, verbose=False, my_env=slicer.util.startupEnvironment()):
     if verbose:
         print('Processing command: ' + str(cmd))
 
     slicer.app.processEvents()
-    try:
-        return call(cmd, shell=True, stdin=None, stdout=None, stderr=None, executable="/usr/local/bin/zsh", env=my_env)
-    except:
-        return call(cmd, shell=True, stdin=None, stdout=None, stderr=None, executable="/bin/bash", env=my_env)
+    my_env['PATH'] = '/usr/local/bin' + os.pathsep + '/usr/local/antsbin/bin/' + os.pathsep + my_env['PATH']
+    return call(cmd, shell=True, stdin=None, stdout=None, stderr=None,
+                executable=os.path.abspath(slicer.util.startupEnvironment()['SHELL']),
+                env=my_env)
 
 
 class TractographyPelvis:
@@ -302,7 +303,7 @@ class TractographyPelvisWidget:
         self.sliderSeeds.minimum = 0.
         self.sliderSeeds.maximum = 1.
         self.sliderSeeds.singleStep = 0.01
-        self.sliderSeeds.value = 0.3
+        self.sliderSeeds.value = 0.15
         self.sliderSeeds.spinBoxVisible = True
 
         tractoFormLayout.addRow('Seeds Threshold (FA)', self.sliderSeeds)
@@ -312,7 +313,7 @@ class TractographyPelvisWidget:
         self.sliderCutoff.minimum = 0.
         self.sliderCutoff.maximum = 1.
         self.sliderCutoff.singleStep = 0.01
-        self.sliderCutoff.value = 0.10
+        self.sliderCutoff.value = 0.05
         self.sliderCutoff.spinBoxVisible = True
 
         tractoFormLayout.addRow('Cutoff (FA)', self.sliderCutoff)
@@ -322,7 +323,7 @@ class TractographyPelvisWidget:
         self.sliderMaxangle.minimum = 1.
         self.sliderMaxangle.maximum = 90.
         self.sliderMaxangle.singleStep = 0.5
-        self.sliderMaxangle.value = 5.
+        self.sliderMaxangle.value = 20.
         self.sliderMaxangle.spinBoxVisible = True
 
         tractoFormLayout.addRow('Admissible Angle', self.sliderMaxangle)
@@ -510,10 +511,24 @@ class TractographyPelvisWidget:
                                      excl_path, bvec_path, bval_path, self.combo_tract.currentIndex)
 
             if not self.radio_whole.isChecked():
-                nodename = self.tractoNode.GetName()
+                tractoname = self.tractoNode.GetName()
+
                 slicer.mrmlScene.RemoveNode(self.tractoNode)
-                _, tractogramNode = slicer.util.loadFiberBundle(path, returnNode=True)
-                tractogramNode.SetName(nodename)
+
+                success, self.upNode = slicer.util.loadFiberBundle(path, True)
+                self.upNode.SetName(tractoname)
+                self.tractoSelector.setCurrentNode(self.upNode)
+
+                fiber_nodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLFiberBundleNode')
+                fiber_nodes.UnRegister(slicer.mrmlScene)
+                fiber_nodes.InitTraversal()
+                fiber_node = fiber_nodes.GetNextItemAsObject()
+                while fiber_node:
+                    if fiber_node is not self.upNode:
+                        fiber_node.GetLineDisplayNode().SetVisibility(0)
+                        fiber_node.GetTubeDisplayNode().SetVisibility(0)
+                        fiber_node.GetGlyphDisplayNode().SetVisibility(0)
+                    fiber_node = fiber_nodes.GetNextItemAsObject()
             else:
                 self.output_file_selector.addCurrentPathToHistory()
                 new_path = self.output_file_selector.currentPath.encode('utf-8')
