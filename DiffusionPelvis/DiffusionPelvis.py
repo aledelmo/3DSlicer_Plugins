@@ -21,13 +21,16 @@ __author__ = 'Alessandro Delmonte'
 __email__ = 'delmonte.ale92@gmail.com'
 
 
-def pipe(cmd, verbose=False, my_env=os.environ):
+def pipe(cmd, verbose=False, my_env=slicer.util.startupEnvironment()):
     if verbose:
         print('Processing command: ' + str(cmd))
 
     slicer.app.processEvents()
-    return call(cmd, shell=True, stdin=None, stdout=None, stderr=None, executable=os.path.abspath(os.environ['SHELL']),
+    my_env['PATH'] = '/usr/local/bin' + os.pathsep + '/usr/local/antsbin/bin/' + os.pathsep + my_env['PATH']
+    return call(cmd, shell=True, stdin=None, stdout=None, stderr=None,
+                executable=os.path.abspath(slicer.util.startupEnvironment()['SHELL']),
                 env=my_env)
+
 
 @contextmanager
 def cd(newdir):
@@ -806,7 +809,7 @@ class DiffusionPelvisLogic:
             win_size = 2
             while win_size ** 3 < diff_dir:
                 win_size += 1
-            win_size = max(round_down_to_odd(win_size),3)
+            win_size = max(round_down_to_odd(win_size), 3)
             win_size = str(win_size)
 
             if check_denoising:
@@ -897,7 +900,6 @@ class DiffusionPelvisLogic:
         pipe('mrconvert -force  -stride -1,2,3,4 ' + os.path.join(self.tmp,
                                                                   'r.mif') + ' ' + nii_path + ' -export_grad_fsl ' + bvec_path + ' ' + bval_path,
              True, self.my_env)
-        print(win_size)
 
         loadingbar.value = 8
         loadingbar.labelText = ''
