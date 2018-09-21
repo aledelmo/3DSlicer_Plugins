@@ -508,7 +508,8 @@ class TractographyPelvisWidget:
             path = self.logic.tracts(self.sliderLength.minimumValue, self.sliderLength.maximumValue,
                                      self.sliderCutoff.value, self.sliderSeeds.value, self.sliderMaxangle.value,
                                      data_path, mask_path, seeds_path,
-                                     excl_path, bvec_path, bval_path, self.combo_tract.currentIndex)
+                                     excl_path, bvec_path, bval_path, self.combo_tract.currentIndex,
+                                     self.radio_whole.isChecked())
 
             if not self.radio_whole.isChecked():
                 tractoname = self.tractoNode.GetName()
@@ -641,7 +642,8 @@ class TractographyPelvisLogic:
 
         return sacrum_convex.astype(np.int16)
 
-    def tracts(self, Minlength, Maxlength, Cutoff, Seeds_T, Angle, data_path, Mask, Seeds, ROE, fbvec, fbval, mode):
+    def tracts(self, Minlength, Maxlength, Cutoff, Seeds_T, Angle, data_path, Mask, Seeds, ROE, fbvec, fbval, mode,
+               is_whole):
         if mode == 0:
             string = 'dwi2tensor -force ' + data_path + ' ' + os.path.join(self.tmp,
                                                                            'DTI.mif') + ' -fslgrad ' + fbvec + ' ' + fbval
@@ -653,11 +655,20 @@ class TractographyPelvisLogic:
                                                                                                        'eigen.mif'),
                  True, self.my_env)
 
-            string = 'tckgen -force ' + os.path.join(self.tmp, 'eigen.mif') + ' ' + os.path.join(self.tmp,
-                                                                                                 'tracto.tck') + ' -algorithm FACT -cutoff ' + str(
-                Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + ' -minlength ' + str(Minlength) + \
-                     ' -maxlength ' + str(Maxlength) + ' -seed_random_per_voxel ' + Seeds + ' 3 ' + ' -angle ' + str(
-                Angle)
+            if not is_whole:
+                string = 'tckgen -force ' + os.path.join(self.tmp, 'eigen.mif') + ' ' + os.path.join(self.tmp,
+                                                                                                     'tracto.tck') + ' -algorithm FACT -cutoff ' + str(
+                    Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + ' -minlength ' + str(Minlength) + \
+                         ' -maxlength ' + str(
+                    Maxlength) + ' -seed_random_per_voxel ' + Seeds + ' 3 ' + ' -angle ' + str(
+                    Angle)
+            else:
+                string = 'tckgen -force ' + os.path.join(self.tmp, 'eigen.mif') + ' ' + os.path.join(self.tmp,
+                                                                                                     'tracto.tck') + ' -algorithm FACT -cutoff ' + str(
+                    Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + ' -minlength ' + str(Minlength) + \
+                         ' -maxlength ' + str(
+                    Maxlength) + ' -seed_image ' + Seeds + ' -angle ' + str(
+                    Angle) + ' -select 1M'
             if Mask:
                 string = string + ' -mask ' + Mask
             if ROE:
@@ -682,10 +693,17 @@ class TractographyPelvisLogic:
             else:
                 algorithm = 'iFOD2'
 
-            string = 'tckgen -force ' + os.path.join(self.tmp, 'FOD.mif') + ' ' + os.path.join(self.tmp, 'tracto.tck') + \
-                     ' -algorithm ' + algorithm + ' -cutoff ' + str(Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + \
-                     ' -minlength ' + str(Minlength) + ' -maxlength ' + str(Maxlength) + ' -seed_random_per_voxel ' \
-                     + Seeds + ' 3  -fslgrad ' + fbvec + ' ' + fbval
+            if not is_whole:
+                string = 'tckgen -force ' + os.path.join(self.tmp, 'FOD.mif') + ' ' + os.path.join(self.tmp, 'tracto.tck') + \
+                         ' -algorithm ' + algorithm + ' -cutoff ' + str(Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + \
+                         ' -minlength ' + str(Minlength) + ' -maxlength ' + str(Maxlength) + ' -seed_random_per_voxel ' \
+                         + Seeds + ' 3  -fslgrad ' + fbvec + ' ' + fbval
+            else:
+                string = 'tckgen -force ' + os.path.join(self.tmp, 'FOD.mif') + ' ' + os.path.join(self.tmp,
+                                                                                                   'tracto.tck') + \
+                         ' -algorithm ' + algorithm + ' -cutoff ' + str(Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + \
+                         ' -minlength ' + str(Minlength) + ' -maxlength ' + str(Maxlength) + ' -seed_image ' \
+                         + Seeds + '  -fslgrad ' + fbvec + ' ' + fbval + ' -select 1M'
 
             if Mask:
                 string = string + ' -mask ' + Mask
