@@ -694,7 +694,8 @@ class TractographyPelvisLogic:
                 algorithm = 'iFOD2'
 
             if not is_whole:
-                string = 'tckgen -force ' + os.path.join(self.tmp, 'FOD.mif') + ' ' + os.path.join(self.tmp, 'tracto.tck') + \
+                string = 'tckgen -force ' + os.path.join(self.tmp, 'FOD.mif') + ' ' + os.path.join(self.tmp,
+                                                                                                   'tracto.tck') + \
                          ' -algorithm ' + algorithm + ' -cutoff ' + str(Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + \
                          ' -minlength ' + str(Minlength) + ' -maxlength ' + str(Maxlength) + ' -seed_random_per_voxel ' \
                          + Seeds + ' 3  -fslgrad ' + fbvec + ' ' + fbval
@@ -712,7 +713,10 @@ class TractographyPelvisLogic:
 
             pipe(string, True, self.my_env)
 
-        final_path = tck2vtk(os.path.join(self.tmp, 'tracto.tck'))
+        if not is_whole:
+            final_path = tck2vtk(os.path.join(self.tmp, 'tracto.tck'))
+        else:
+            final_path = os.path.join(self.tmp, 'tracto.tck')
 
         return final_path
 
