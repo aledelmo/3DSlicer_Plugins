@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
-import pickle
-import shutil
-import sys
-import tempfile
-import unittest
-from contextlib import contextmanager
-from subprocess import call
-
 import ctk
 import dicom
 import numpy as np
+import os
+import pickle
 import qt
+import shutil
 import slicer
+import sys
+import json
+import tempfile
+import unittest
+from contextlib import contextmanager
 from joblib import cpu_count
+from subprocess import call
 
 __author__ = 'Alessandro Delmonte'
 __email__ = 'delmonte.ale92@gmail.com'
@@ -26,7 +26,14 @@ def pipe(cmd, verbose=False, my_env=slicer.util.startupEnvironment()):
         print('Processing command: ' + str(cmd))
 
     slicer.app.processEvents()
-    my_env['PATH'] = '/usr/local/bin' + os.pathsep + '/usr/local/antsbin/bin/' + os.pathsep + my_env['PATH']
+
+    with open(os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config', 'config.json')),
+              'r') as handle:
+        add_paths = json.load(handle)
+
+    print add_paths
+
+    my_env['PATH'] = add_paths['MRTrix_path'] + os.pathsep + add_paths['ANTS_path'] + os.pathsep + my_env['PATH']
     return call(cmd, shell=True, stdin=None, stdout=None, stderr=None,
                 executable=os.path.abspath(slicer.util.startupEnvironment()['SHELL']),
                 env=my_env)

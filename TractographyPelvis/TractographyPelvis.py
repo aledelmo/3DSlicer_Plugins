@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import json
 import os
 import pickle
 import shutil
@@ -46,7 +47,12 @@ def pipe(cmd, verbose=False, my_env=slicer.util.startupEnvironment()):
         print('Processing command: ' + str(cmd))
 
     slicer.app.processEvents()
-    my_env['PATH'] = '/usr/local/bin' + os.pathsep + '/usr/local/antsbin/bin/' + os.pathsep + my_env['PATH']
+
+    with open(os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config', 'config.json')),
+              'r') as handle:
+        add_paths = json.load(handle)
+
+    my_env['PATH'] = add_paths['MRTrix_path'] + os.pathsep + my_env['PATH']
     return call(cmd, shell=True, stdin=None, stdout=None, stderr=None,
                 executable=os.path.abspath(slicer.util.startupEnvironment()['SHELL']),
                 env=my_env)
