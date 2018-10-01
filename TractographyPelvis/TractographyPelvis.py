@@ -329,7 +329,7 @@ class TractographyPelvisWidget:
         self.sliderMaxangle.minimum = 1.
         self.sliderMaxangle.maximum = 90.
         self.sliderMaxangle.singleStep = 0.5
-        self.sliderMaxangle.value = 20.
+        self.sliderMaxangle.value = 45.
         self.sliderMaxangle.spinBoxVisible = True
 
         tractoFormLayout.addRow('Admissible Angle', self.sliderMaxangle)
