@@ -31,8 +31,6 @@ def pipe(cmd, verbose=False, my_env=slicer.util.startupEnvironment()):
               'r') as handle:
         add_paths = json.load(handle)
 
-    print add_paths
-
     my_env['PATH'] = add_paths['MRTrix_path'] + os.pathsep + add_paths['ANTS_path'] + os.pathsep + my_env['PATH']
     return call(cmd, shell=True, stdin=None, stdout=None, stderr=None,
                 executable=os.path.abspath(slicer.util.startupEnvironment()['SHELL']),
