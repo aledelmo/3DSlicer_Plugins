@@ -23,6 +23,7 @@ import numpy.linalg as npl
 import qt
 import slicer
 import vtk
+import nibabel as nib
 from nibabel.affines import apply_affine
 from nibabel.streamlines.tck import TckFile as tck
 from scipy.ndimage import generate_binary_structure
@@ -40,6 +41,11 @@ def vtkmatrix_to_numpy(matrix):
         for j in range(4):
             m[i, j] = matrix.GetElement(i, j)
     return m
+
+
+def save_nii(fname, data, affine):
+    img = nib.Nifti1Image(data.astype(np.int16), affine)
+    nib.save(img, fname)
 
 
 def pipe(cmd, verbose=False, my_env=slicer.util.startupEnvironment()):
@@ -241,7 +247,7 @@ class TractographyPelvisWidget:
         self.seedsNode = self.seedsSelector.currentNode()
 
         self.seedsSelector.connect('nodeActivated(vtkMRMLNode*)', self.onseedsSelect)
-        tractoFormLayout.addRow('Input Seeds Label: ', self.seedsSelector)
+        tractoFormLayout.addRow('Input Parcellation: ', self.seedsSelector)
 
         self.tractoSelector = slicer.qMRMLNodeComboBox()
         self.tractoSelector.nodeTypes = ['vtkMRMLFiberBundleNode']
@@ -477,7 +483,7 @@ class TractographyPelvisWidget:
 
     def ontractoButton(self):
         if self.dwiNode and self.sliderSeeds.value > self.sliderCutoff.value and (
-                self.tractoNode or self.radio_whole.isChecked()):
+                self.tractoNode or self.radio_whole.isChecked()) and self.seedsNode:
             data_path = os.path.join(self.logic.tmp, 'data.nii')
             bval_path = os.path.join(self.logic.tmp, 'data.bval')
             bvec_path = os.path.join(self.logic.tmp, 'data.bvec')
@@ -496,13 +502,24 @@ class TractographyPelvisWidget:
                 slicer.util.saveNode(self.maskNode, mask_path, properties)
             else:
                 mask_path = None
-            if self.seedsNode:
-                seeds_path = os.path.join(self.logic.tmp, 'seeds.nii')
-                properties = {}
-                properties['useCompression'] = 0
-                slicer.util.saveNode(self.seedsNode, seeds_path, properties)
+
+            seeds_path = os.path.join(self.logic.tmp, 'seeds.nii')
+            properties = {}
+            properties['useCompression'] = 0
+            if not self.radio_whole.isChecked():
+                label_list = [n for n in range(15, 28)] + [n for n in range(7, 10)]
+                temp_seed_node = slicer.vtkSlicerVolumesLogic().CloneVolume(slicer.mrmlScene, self.seedsNode, 'out',
+                                                                            True)
+                parc = np.copy(slicer.util.arrayFromVolume(self.seedsNode))
+                seed_mask = np.zeros(parc.shape)
+                for label in label_list:
+                    seed_mask[parc == label] = 1
+                slicer.util.updateVolumeFromArray(temp_seed_node, seed_mask)
+                slicer.util.saveNode(temp_seed_node, seeds_path, properties)
+                slicer.mrmlScene.RemoveNode(temp_seed_node)
             else:
-                seeds_path = None
+                slicer.util.saveNode(self.seedsNode, seeds_path, properties)
+
             if self.exclusionNode:
                 excl_path = os.path.join(self.logic.tmp, 'exclusion.nii')
                 properties = {}
