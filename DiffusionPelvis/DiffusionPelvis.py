@@ -3,6 +3,8 @@
 
 import ctk
 import dicom
+import json
+import nibabel as nib
 import numpy as np
 import os
 import pickle
@@ -10,7 +12,6 @@ import qt
 import shutil
 import slicer
 import sys
-import json
 import tempfile
 import unittest
 from contextlib import contextmanager
@@ -918,10 +919,12 @@ class DiffusionPelvisLogic:
         with cd(self.tmp):
             pipe('dwiextract -force ' + data_path + ' -bzero ' + b0_path + '  -fslgrad ' + bvecs + ' ' + bvals, True,
                  self.my_env)
-            cmd = 'antsRegistration --verbose 1 --dimensionality 3 --float 0 --output \[out,b0Warped.nii,coroT2Warped.nii\] --interpolation Linear --initial-moving-transform \[' + t2_path + ',' + b0_path + ',1\] --transform Rigid\[0.1\] --metric MI\[' + t2_path + ',' + b0_path + ',1,32,Regular,0.25\] --convergence \[1000x500x250x100,1e-6,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox --use-histogram-matching 1 --winsorize-image-intensities \[0.005,0.995\] '
+            in_size = nib.load(b0_path).shape
+            cmd = 'antsRegistration --verbose 1 --dimensionality 3 --float 0 --output \[out,b0Warped.nii.gz,coroT2Warped.nii.gz\] --interpolation Linear --initial-moving-transform \[' + t2_path + ',' + b0_path + ',1\] --transform Rigid\[0.1\] --metric MI\[' + t2_path + ',' + b0_path + ',1,32,Regular,0.25\] --convergence \[1000x500x250x100,1e-6,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox --use-histogram-matching 1 --winsorize-image-intensities \[0.005,0.995\] '
             if affine:
                 cmd += ' --transform Affine\[0.1\] --metric MI\[' + t2_path + ',' + b0_path + ',1,32,Regular,0.25\] --convergence \[1000x500x250x100,1e-6,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox --use-histogram-matching 1'
             if elastic:
+                cmd += ' --transform Affine\[0.1\] --metric MI\[' + t2_path + ',' + b0_path + ',1,32,Regular,0.25\] --convergence \[1000x500x250x100,1e-6,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox --use-histogram-matching 1'
                 if low:
                     cmd += ' --transform SyN\[0.1,3,0\] --metric CC\[' + t2_path + ',' + b0_path + ',1,4\] --convergence \[100x70x50x20,1e-5,10\] --shrink-factors 8x4x2x1 --smoothing-sigmas 3x2x1x0vox --use-estimate-learning-rate-once 1 --use-histogram-matching 1 --winsorize-image-intensities \[0.005,0.995\] '
                 elif med:
@@ -937,7 +940,7 @@ class DiffusionPelvisLogic:
 
             if elastic:
                 pipe(
-                    'for i in {0..2}; do; antsApplyTransforms -d 3 -i identity_warp${i}.nii -o mrtrix_warp${i}.nii -r ' + t2_path + ' -t out1Warp.nii out0GenericAffine.mat; done;',
+                    'for i in {0..2}; do; antsApplyTransforms -d 3 -i identity_warp${i}.nii -o mrtrix_warp${i}.nii -r ' + t2_path + ' -t out1Warp.nii.gz out0GenericAffine.mat; done;',
                     True, self.my_env)
                 pipe('warpcorrect -force mrtrix_warp\[\].nii mrtrix_warp_corrected.mif', True, self.my_env)
             else:
@@ -946,9 +949,12 @@ class DiffusionPelvisLogic:
                 pipe('warpcorrect -force mrtrix_warp\[\].mif mrtrix_warp_corrected.mif', True, self.my_env)
 
             pipe(
-                'mrtransform -force -stride -1,2,3,4 ' + data_path + ' -warp mrtrix_warp_corrected.mif DWIWarped.nii -datatype int16 ',
+                'mrtransform -force -stride -1,2,3,4 ' + data_path + ' -warp mrtrix_warp_corrected.mif DWIWarped.mif -datatype int16 ',
                 True,
                 self.my_env)
+
+            pipe(
+                'mrresize DWIWarped.mif DWIWarped.nii -size ' + ','.join(str(n) for n in in_size[0:3]), True, self.my_env)
 
         return os.path.join(self.tmp, 'DWIWarped.nii')
 
