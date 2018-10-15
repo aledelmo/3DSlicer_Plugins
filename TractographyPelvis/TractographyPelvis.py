@@ -133,82 +133,82 @@ class TractographyPelvisWidget:
 
     def setup(self):
 
-        seedsCollapsibleButton = ctk.ctkCollapsibleButton()
-        seedsCollapsibleButton.text = 'Automatic Seeds generation'
-
-        seedsCollapsibleButton.collapsed = True
-
-        self.layout.addWidget(seedsCollapsibleButton)
-
-        seedsFormLayout = qt.QFormLayout(seedsCollapsibleButton)
-
-        self.sacrumSelector = slicer.qMRMLNodeComboBox()
-        self.sacrumSelector.nodeTypes = ['vtkMRMLLabelMapVolumeNode']
-        self.sacrumSelector.selectNodeUponCreation = True
-        self.sacrumSelector.addEnabled = False
-        self.sacrumSelector.removeEnabled = False
-        self.sacrumSelector.noneEnabled = False
-        self.sacrumSelector.showHidden = False
-        self.sacrumSelector.renameEnabled = False
-        self.sacrumSelector.showChildNodeTypes = False
-        self.sacrumSelector.setMRMLScene(slicer.mrmlScene)
-
-        self.onsacrumSelect()
-
-        self.sacrumSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onsacrumSelect)
-        seedsFormLayout.addRow('Input Sacrum Label: ', self.sacrumSelector)
-
-        self.faSelector = slicer.qMRMLNodeComboBox()
-        self.faSelector.nodeTypes = ['vtkMRMLScalarVolumeNode']
-        self.faSelector.selectNodeUponCreation = True
-        self.faSelector.addEnabled = False
-        self.faSelector.removeEnabled = False
-        self.faSelector.noneEnabled = False
-        self.faSelector.showHidden = False
-        self.faSelector.renameEnabled = False
-        self.faSelector.showChildNodeTypes = False
-        self.faSelector.setMRMLScene(slicer.mrmlScene)
-
-        self.onfaSelect()
-
-        self.faSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onfaSelect)
-        seedsFormLayout.addRow('FA map: ', self.faSelector)
-
-        self.markups_selector = slicer.qSlicerSimpleMarkupsWidget()
-        self.markups_selector.objectName = 'seedFiducialsNodeSelector'
-        self.markups_selector = slicer.qSlicerSimpleMarkupsWidget()
-        self.markups_selector.objectName = 'seedFiducialsNodeSelector'
-        self.markups_selector.toolTip = "Select a fiducial to use as the origin of the algorithm."
-        self.markups_selector.setNodeBaseName("OriginSeeds")
-        self.markups_selector.defaultNodeColor = qt.QColor(202, 169, 250)
-        # self.markups_selector.tableWidget().hide()
-        self.markups_selector.maximumHeight = 150
-        self.markups_selector.markupsSelectorComboBox().noneEnabled = False
-        # self.markups_selector.markupsPlaceWidget().placeMultipleMarkups = slicer.qSlicerMarkupsPlaceWidget.ForcePlaceSingleMarkup
-        seedsFormLayout.addRow("Initial points:", self.markups_selector)
-        self.parent.connect('mrmlSceneChanged(vtkMRMLScene*)',
-                            self.markups_selector, 'setMRMLScene(vtkMRMLScene*)')
-
-        self.autoseedsSelector = slicer.qMRMLNodeComboBox()
-        self.autoseedsSelector.nodeTypes = ['vtkMRMLLabelMapVolumeNode']
-        self.autoseedsSelector.selectNodeUponCreation = True
-        self.autoseedsSelector.addEnabled = True
-        self.autoseedsSelector.removeEnabled = False
-        self.autoseedsSelector.noneEnabled = False
-        self.autoseedsSelector.showHidden = False
-        self.autoseedsSelector.renameEnabled = False
-        self.autoseedsSelector.showChildNodeTypes = False
-        self.autoseedsSelector.setMRMLScene(slicer.mrmlScene)
-
-        self.autoseedsSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onautoseedsSelect)
-        seedsFormLayout.addRow('Output Seeds Label: ', self.autoseedsSelector)
-
-        self.autoseedsButton = qt.QPushButton('Extract Seeds')
-        self.autoseedsButton.toolTip = 'Extract tractography seed points from the sacrum segmentation and the fa map'
-        self.autoseedsButton.enabled = True
-
-        self.autoseedsButton.connect('clicked(bool)', self.onautoseedsButton)
-        seedsFormLayout.addRow(self.autoseedsButton)
+        # seedsCollapsibleButton = ctk.ctkCollapsibleButton()
+        # seedsCollapsibleButton.text = 'Automatic Seeds generation'
+        #
+        # seedsCollapsibleButton.collapsed = True
+        #
+        # self.layout.addWidget(seedsCollapsibleButton)
+        #
+        # seedsFormLayout = qt.QFormLayout(seedsCollapsibleButton)
+        #
+        # self.sacrumSelector = slicer.qMRMLNodeComboBox()
+        # self.sacrumSelector.nodeTypes = ['vtkMRMLLabelMapVolumeNode']
+        # self.sacrumSelector.selectNodeUponCreation = True
+        # self.sacrumSelector.addEnabled = False
+        # self.sacrumSelector.removeEnabled = False
+        # self.sacrumSelector.noneEnabled = False
+        # self.sacrumSelector.showHidden = False
+        # self.sacrumSelector.renameEnabled = False
+        # self.sacrumSelector.showChildNodeTypes = False
+        # self.sacrumSelector.setMRMLScene(slicer.mrmlScene)
+        #
+        # self.onsacrumSelect()
+        #
+        # self.sacrumSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onsacrumSelect)
+        # seedsFormLayout.addRow('Input Sacrum Label: ', self.sacrumSelector)
+        #
+        # self.faSelector = slicer.qMRMLNodeComboBox()
+        # self.faSelector.nodeTypes = ['vtkMRMLScalarVolumeNode']
+        # self.faSelector.selectNodeUponCreation = True
+        # self.faSelector.addEnabled = False
+        # self.faSelector.removeEnabled = False
+        # self.faSelector.noneEnabled = False
+        # self.faSelector.showHidden = False
+        # self.faSelector.renameEnabled = False
+        # self.faSelector.showChildNodeTypes = False
+        # self.faSelector.setMRMLScene(slicer.mrmlScene)
+        #
+        # self.onfaSelect()
+        #
+        # self.faSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onfaSelect)
+        # seedsFormLayout.addRow('FA map: ', self.faSelector)
+        #
+        # self.markups_selector = slicer.qSlicerSimpleMarkupsWidget()
+        # self.markups_selector.objectName = 'seedFiducialsNodeSelector'
+        # self.markups_selector = slicer.qSlicerSimpleMarkupsWidget()
+        # self.markups_selector.objectName = 'seedFiducialsNodeSelector'
+        # self.markups_selector.toolTip = "Select a fiducial to use as the origin of the algorithm."
+        # self.markups_selector.setNodeBaseName("OriginSeeds")
+        # self.markups_selector.defaultNodeColor = qt.QColor(202, 169, 250)
+        # # self.markups_selector.tableWidget().hide()
+        # self.markups_selector.maximumHeight = 150
+        # self.markups_selector.markupsSelectorComboBox().noneEnabled = False
+        # # self.markups_selector.markupsPlaceWidget().placeMultipleMarkups = slicer.qSlicerMarkupsPlaceWidget.ForcePlaceSingleMarkup
+        # seedsFormLayout.addRow("Initial points:", self.markups_selector)
+        # self.parent.connect('mrmlSceneChanged(vtkMRMLScene*)',
+        #                     self.markups_selector, 'setMRMLScene(vtkMRMLScene*)')
+        #
+        # self.autoseedsSelector = slicer.qMRMLNodeComboBox()
+        # self.autoseedsSelector.nodeTypes = ['vtkMRMLLabelMapVolumeNode']
+        # self.autoseedsSelector.selectNodeUponCreation = True
+        # self.autoseedsSelector.addEnabled = True
+        # self.autoseedsSelector.removeEnabled = False
+        # self.autoseedsSelector.noneEnabled = False
+        # self.autoseedsSelector.showHidden = False
+        # self.autoseedsSelector.renameEnabled = False
+        # self.autoseedsSelector.showChildNodeTypes = False
+        # self.autoseedsSelector.setMRMLScene(slicer.mrmlScene)
+        #
+        # self.autoseedsSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onautoseedsSelect)
+        # seedsFormLayout.addRow('Output Seeds Label: ', self.autoseedsSelector)
+        #
+        # self.autoseedsButton = qt.QPushButton('Extract Seeds')
+        # self.autoseedsButton.toolTip = 'Extract tractography seed points from the sacrum segmentation and the fa map'
+        # self.autoseedsButton.enabled = True
+        #
+        # self.autoseedsButton.connect('clicked(bool)', self.onautoseedsButton)
+        # seedsFormLayout.addRow(self.autoseedsButton)
 
         tractoCollapsibleButton = ctk.ctkCollapsibleButton()
         tractoCollapsibleButton.text = 'Tractography'
@@ -233,6 +233,18 @@ class TractographyPelvisWidget:
         self.dwiSelector.connect('nodeActivated(vtkMRMLNode*)', self.ondwiSelect)
         tractoFormLayout.addRow('Input DWI: ', self.dwiSelector)
 
+        groupbox = qt.QGroupBox()
+        groupbox.setTitle('Choose the seed map:')
+        groupbox.setContentsMargins(11, 20, 11, 11)
+        grid_layout = qt.QGridLayout(groupbox)
+        grid_layout.setColumnStretch(1, 1)
+        grid_layout.setColumnStretch(2, 1)
+        grid_layout.setColumnStretch(3, 1)
+        grid_layout.setColumnStretch(4, 1)
+
+        textwidget = qt.QLabel()
+        textwidget.setText('Input LabelMap: ')
+
         self.seedsSelector = slicer.qMRMLNodeComboBox()
         self.seedsSelector.nodeTypes = ['vtkMRMLLabelMapVolumeNode']
         self.seedsSelector.selectNodeUponCreation = True
@@ -247,7 +259,20 @@ class TractographyPelvisWidget:
         self.seedsNode = self.seedsSelector.currentNode()
 
         self.seedsSelector.connect('nodeActivated(vtkMRMLNode*)', self.onseedsSelect)
-        tractoFormLayout.addRow('Input Parcellation: ', self.seedsSelector)
+        # tractoFormLayout.addRow('Input Parcellation: ', self.seedsSelector)
+
+        grid_layout.addWidget(textwidget, 0, 0, 0)
+        grid_layout.addWidget(self.seedsSelector, 0, 1, 1, 4)
+
+        self.radio_p = qt.QRadioButton('Standard LabelMap')
+        self.radio_p.setChecked(True)
+        self.radio_l = qt.QRadioButton('Binary Mask')
+        grid_layout.addWidget(self.radio_p, 2, 2, 0)
+        grid_layout.addWidget(self.radio_l, 2, 3, 0)
+
+        groupbox.setLayout(grid_layout)
+
+        tractoFormLayout.addRow(groupbox)
 
         self.tractoSelector = slicer.qMRMLNodeComboBox()
         self.tractoSelector.nodeTypes = ['vtkMRMLFiberBundleNode']
@@ -445,41 +470,41 @@ class TractographyPelvisWidget:
     def onexclusionSelect(self):
         self.exclusionNode = self.exclusionSelector.currentNode()
 
-    def onsacrumSelect(self):
-        if self.sacrumSelector.currentNode():
-            sacrumNode = slicer.util.arrayFromVolume(self.sacrumSelector.currentNode())
-            self.sacrumNode = np.copy(sacrumNode)
-            self.sacrumNode = np.swapaxes(self.sacrumNode, 0, 2)
-            ijkToRas = vtk.vtkMatrix4x4()
-            self.sacrumSelector.currentNode().GetIJKToRASMatrix(ijkToRas)
-            self.sacrum_affine = vtkmatrix_to_numpy(ijkToRas)
-            self.ijkToRas = ijkToRas
+    # def onsacrumSelect(self):
+    #     if self.sacrumSelector.currentNode():
+    #         sacrumNode = slicer.util.arrayFromVolume(self.sacrumSelector.currentNode())
+    #         self.sacrumNode = np.copy(sacrumNode)
+    #         self.sacrumNode = np.swapaxes(self.sacrumNode, 0, 2)
+    #         ijkToRas = vtk.vtkMatrix4x4()
+    #         self.sacrumSelector.currentNode().GetIJKToRASMatrix(ijkToRas)
+    #         self.sacrum_affine = vtkmatrix_to_numpy(ijkToRas)
+    #         self.ijkToRas = ijkToRas
 
-    def onfaSelect(self):
-        if self.faSelector.currentNode():
-            faNode = slicer.util.arrayFromVolume(self.faSelector.currentNode())
-            self.faNode = np.copy(faNode)
-            self.faNode = np.swapaxes(self.faNode, 0, 2)
-            ijkToRas = vtk.vtkMatrix4x4()
-            self.faSelector.currentNode().GetIJKToRASMatrix(ijkToRas)
-            self.fa_affine = vtkmatrix_to_numpy(ijkToRas)
-
-    def onautoseedsSelect(self):
-        self.autoseedsNode = self.autoseedsSelector.currentNode()
-
-    def onautoseedsButton(self):
-        current_seeds_node = self.markups_selector.currentNode()
-        fid_list = []
-        for n in range(current_seeds_node.GetNumberOfFiducials()):
-            current = [0, 0, 0]
-            current_seeds_node.GetNthFiducialPosition(n, current)
-            fid_list.append(current)
-        print fid_list
-
-        if self.sacrumNode.any() and self.faNode.any():
-            seeds = self.logic.autoseeds(self.sacrumNode, self.faNode, self.sacrum_affine, self.fa_affine)
-        slicer.util.updateVolumeFromArray(self.autoseedsNode, np.swapaxes(seeds, 0, 2))
-        self.autoseedsNode.SetIJKToRASMatrix(self.ijkToRas)
+    # def onfaSelect(self):
+    #     if self.faSelector.currentNode():
+    #         faNode = slicer.util.arrayFromVolume(self.faSelector.currentNode())
+    #         self.faNode = np.copy(faNode)
+    #         self.faNode = np.swapaxes(self.faNode, 0, 2)
+    #         ijkToRas = vtk.vtkMatrix4x4()
+    #         self.faSelector.currentNode().GetIJKToRASMatrix(ijkToRas)
+    #         self.fa_affine = vtkmatrix_to_numpy(ijkToRas)
+    #
+    #  def onautoseedsSelect(self):
+    #     self.autoseedsNode = self.autoseedsSelector.currentNode()
+    #
+    # def onautoseedsButton(self):
+    #     current_seeds_node = self.markups_selector.currentNode()
+    #     fid_list = []
+    #     for n in range(current_seeds_node.GetNumberOfFiducials()):
+    #         current = [0, 0, 0]
+    #         current_seeds_node.GetNthFiducialPosition(n, current)
+    #         fid_list.append(current)
+    #     print fid_list
+    #
+    #     if self.sacrumNode.any() and self.faNode.any():
+    #         seeds = self.logic.autoseeds(self.sacrumNode, self.faNode, self.sacrum_affine, self.fa_affine)
+    #     slicer.util.updateVolumeFromArray(self.autoseedsNode, np.swapaxes(seeds, 0, 2))
+    #     self.autoseedsNode.SetIJKToRASMatrix(self.ijkToRas)
 
     def ontractoButton(self):
         if self.dwiNode and self.sliderSeeds.value > self.sliderCutoff.value and (
@@ -506,7 +531,7 @@ class TractographyPelvisWidget:
             seeds_path = os.path.join(self.logic.tmp, 'seeds.nii')
             properties = {}
             properties['useCompression'] = 0
-            if not self.radio_whole.isChecked():
+            if (not self.radio_whole.isChecked()) or (not self.radio_l.isChecked()):
                 label_list = [n for n in range(15, 28)] + [n for n in range(7, 10)]
                 temp_seed_node = slicer.vtkSlicerVolumesLogic().CloneVolume(slicer.mrmlScene, self.seedsNode, 'out',
                                                                             True)
@@ -622,48 +647,48 @@ class TractographyPelvisLogic:
     def __str__(self):
         return 'TractographyPelvis implementation class'
 
-    @staticmethod
-    def autoseeds(sacrum, fa, affine_sacrum, affine_fa):
-        # struct = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-        struct = np.ones((3, 3), dtype=np.uint8)
-        sacrum_convex = np.zeros(sacrum.shape)
-        for i in range(sacrum.shape[1]):
-            slice2d = np.zeros(sacrum[:, i, :].shape)
-            borders = np.logical_xor(sacrum[:, i, :], binary_erosion(sacrum[:, i, :], struct))
-            points = np.argwhere(borders)
-            try:
-                hull = ConvexHull(points)
-                deln = Delaunay(points[hull.vertices])
-                idx = np.stack(np.indices(sacrum[:, i, :].shape), axis=-1)
-                out_idx = np.nonzero(deln.find_simplex(idx) + 1)
-                slice2d[out_idx] = 1
-                slice2d = np.logical_xor(slice2d, sacrum[:, i, :])
-            except:
-                pass
-            sacrum_convex[:, i, :] = slice2d
-
-        convex_points = np.argwhere(sacrum_convex)
-        label_vox2fa_vox = npl.inv(affine_fa).dot(affine_sacrum)
-        fa_points = np.round(apply_affine(label_vox2fa_vox, convex_points))
-        for i, ind in enumerate(fa_points.astype(int)):
-            if fa[tuple(ind)] < 0.1:
-                index = convex_points[i]
-                sacrum_convex[tuple(index)] = 0
-
-        struct = generate_binary_structure(3, 3)
-        sacrum_convex = binary_opening(sacrum_convex, struct)
-        sacrum_convex = binary_dilation(sacrum_convex, struct)
-        sacrum_convex = binary_fill_holes(sacrum_convex, struct)
-        sacrum_convex[np.nonzero(sacrum)] = 0
-
-        # highest_point = np.amax(np.transpose(np.nonzero(sacrum_convex))[:, 1])
-        # lowest_point = np.amin(np.transpose(np.nonzero(sacrum_convex))[:, 1])
-        # print highest_point
-        # print lowest_point
-        #
-        # sacrum_convex[:, highest_point - 3:highest_point - 3, :] = 1
-
-        return sacrum_convex.astype(np.int16)
+    # @staticmethod
+    # def autoseeds(sacrum, fa, affine_sacrum, affine_fa):
+    #     # struct = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    #     struct = np.ones((3, 3), dtype=np.uint8)
+    #     sacrum_convex = np.zeros(sacrum.shape)
+    #     for i in range(sacrum.shape[1]):
+    #         slice2d = np.zeros(sacrum[:, i, :].shape)
+    #         borders = np.logical_xor(sacrum[:, i, :], binary_erosion(sacrum[:, i, :], struct))
+    #         points = np.argwhere(borders)
+    #         try:
+    #             hull = ConvexHull(points)
+    #             deln = Delaunay(points[hull.vertices])
+    #             idx = np.stack(np.indices(sacrum[:, i, :].shape), axis=-1)
+    #             out_idx = np.nonzero(deln.find_simplex(idx) + 1)
+    #             slice2d[out_idx] = 1
+    #             slice2d = np.logical_xor(slice2d, sacrum[:, i, :])
+    #         except:
+    #             pass
+    #         sacrum_convex[:, i, :] = slice2d
+    #
+    #     convex_points = np.argwhere(sacrum_convex)
+    #     label_vox2fa_vox = npl.inv(affine_fa).dot(affine_sacrum)
+    #     fa_points = np.round(apply_affine(label_vox2fa_vox, convex_points))
+    #     for i, ind in enumerate(fa_points.astype(int)):
+    #         if fa[tuple(ind)] < 0.1:
+    #             index = convex_points[i]
+    #             sacrum_convex[tuple(index)] = 0
+    #
+    #     struct = generate_binary_structure(3, 3)
+    #     sacrum_convex = binary_opening(sacrum_convex, struct)
+    #     sacrum_convex = binary_dilation(sacrum_convex, struct)
+    #     sacrum_convex = binary_fill_holes(sacrum_convex, struct)
+    #     sacrum_convex[np.nonzero(sacrum)] = 0
+    #
+    #     # highest_point = np.amax(np.transpose(np.nonzero(sacrum_convex))[:, 1])
+    #     # lowest_point = np.amin(np.transpose(np.nonzero(sacrum_convex))[:, 1])
+    #     # print highest_point
+    #     # print lowest_point
+    #     #
+    #     # sacrum_convex[:, highest_point - 3:highest_point - 3, :] = 1
+    #
+    #     return sacrum_convex.astype(np.int16)
 
     def tracts(self, Minlength, Maxlength, Cutoff, Seeds_T, Angle, data_path, Mask, Seeds, ROE, fbvec, fbval, mode,
                is_whole):
