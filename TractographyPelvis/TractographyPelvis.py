@@ -392,7 +392,7 @@ class TractographyPelvisWidget:
         textwidget_info = qt.QLabel()
         textwidget_info.setText(
             'Slicer can not manage large tractogram files. In the situation you desire to compute a whole-pelvis'
-            ' tractography,\nplease check the following box and select a vtk output file. The result will be saved directly'
+            ' tractography,\nplease check the following box and select a tck output file. The result will be saved directly'
             ' on the disk.\n')
         tractoFormLayout.addRow(textwidget_info)
 
@@ -409,7 +409,7 @@ class TractographyPelvisWidget:
         grid_layout.addWidget(self.radio_whole, 0, 1, 0)
 
         textwidget2 = qt.QLabel()
-        textwidget2.setText('File Path (VTK): ')
+        textwidget2.setText('File Path (.tck): ')
         grid_layout.addWidget(textwidget2, 1, 0, 0)
         grid_layout.addWidget(self.output_file_selector, 1, 1, 1, 3)
 
