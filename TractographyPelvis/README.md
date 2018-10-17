@@ -54,23 +54,26 @@ not suppressed completely but truncated at the interface.
 algorithms and FOD (fiber orientation distribution) for CSD based methods.
 
 * **Cutoff**: Fiber tracking termination condition. When a streamlines enters in a part of the image with a lower FA than the cutoff
-threshold the tracking is concluded (FOD amplitude for CSD methods) (The selected Cutoff must always be lower of the Seed Threshold)
+threshold the tracking is concluded (FOD amplitude for CSD methods). (The selected Cutoff must always be lower of the Seed Threshold)
 
 * **Admissible Angle**: maximum angle, in degree, that is allowed between tracking steps.
 
-* **Length**:
+* **Length**: All the output fibers will be selected between those having a length respecting this range. The values are expressed
+in millimeters (mm).
 
-* **Algorithm**:
+* **Algorithm**: The algorithm selection allows for three different methodologies: deterministic diffusion tensor based (FACT),
+deterministic CSD based (SD_STREAM), probabilistic CSD based (iFOD2).
+    * FACT:
+    * SD_STREAM:
+    * iFOD2:
 
 ___
 #### Whole Pelvis
 
-* **Use whole**:
+* **Use whole**: Ticking this box enables the whole-pelvis modality. The Input LabelMap will be assumed being a binary mask representing
+the whole body. The result will be saved on the disk instead of being loaded on Slicer
 
-* **File path**:
-
-
-
+* **File path**: Specify a file path for the whole-pelvis file. The file extension must be .tck (the standard MRTrix3 tractogram format)
 
 ## Team / Contacts
 
