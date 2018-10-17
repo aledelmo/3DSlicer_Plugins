@@ -2,10 +2,19 @@
 This module aims to compensate the 3D Slicer lack of functionality regarding tractography algorithms. Here the MRTrix3
 methods are wrapped to extend and enrich the Slicer framework.
 
-Please note that this plug-in implements external functionality. More specific indication can be found on the [MRTrix3][1] website.
-
+Please note that this plug-in implements external softwares. More specific indication can be found on the [MRTrix3][1] website.
 
 ## Installation
+Prerequisites: MRTrix3 must be installed on the computer. Detailed instructions on how to install it at this link: <https://mrtrix.readthedocs.io/en/latest/installation/before_install.html>
+
+Note the folder path of the MRTrix3 binaries (e.g. /usr/local/bin), they will be used in the end.
+
+From the Slicer menu bar go on Edit --> Application Settings --> Modules
+
+In the Additional module path add the DiffusionPelvis folder and add it up to your favourite modules.
+
+Finally, change the path in config.json file, under the plug-in config folder, with the MRTrix3 path you noted in the beginning (alternatively,
+in Unix-based system you can obtain the requested path writing in a terminal 'which mrview')
 
 ## Usage
 
