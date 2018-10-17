@@ -30,9 +30,9 @@ pelvis support.
 ___
 #### Input data
 
-* Input DWI: node containing the diffusion weighted volume on which the tractography algorithm will be applied. (*MANDATORY*)
+* **Input DWI**: node containing the diffusion weighted volume on which the tractography algorithm will be applied. (*MANDATORY*)
 
-* Input LabelMap: The initial seed points search zone, that will eventually be propagated until all the 
+* **Input LabelMap**: The initial seed points search zone, that will eventually be propagated until all the 
 fibers are tracked down in their entire lengths. In the situation the searched output is a whole-pelvis tractogram 
 this field must correspond to a node with a body mask. For ROI-based tractogram two options are available: Standard LabelMap
 (*default*) and Binary Mask.
@@ -40,32 +40,34 @@ this field must correspond to a node with a body mask. For ROI-based tractogram 
     (extremities included). Finally using the vertebral canal and all the sacral holes.
     * Binary Mask: To use custom masks a label node can be specified (0: background, 1: seeds)
 
-* Output Fiber Bundle: output node where the tractography will be stored. This field is only needed in case of ROI-based tractogram.
+* **Output Fiber Bundle**: output node where the tractography will be stored. This field is only needed in case of ROI-based tractogram.
 The whole-pelvis tractograms will not be loaded.
 
 ___
 #### Parameters
-* Whole Pelvis Mask: Limit the tractogram in the selected mask. Attention: the fibers extending over the mask border are 
+* **Whole Pelvis Mask**: Limit the tractogram in the selected mask. Attention: the fibers extending over the mask border are 
 not suppressed completely but truncated at the interface.
 
-* Exclusion mask: 
+* **Exclusion mask**: All the fibers entering in this zone, even if for just one point, are completely discarded.
 
-* Seed Threshold:
+* **Seed Threshold**: Minimum value needed to consider a voxel a seed point. It indicates an FA value for diffusion tensor based
+algorithms and FOD (fiber orientation distribution) for CSD based methods.
 
-* Cutoff:
+* **Cutoff**: Fiber tracking termination condition. When a streamlines enters in a part of the image with a lower FA than the cutoff
+threshold the tracking is concluded (FOD amplitude for CSD methods) (The selected Cutoff must always be lower of the Seed Threshold)
 
-* Admissible Angle:
+* **Admissible Angle**: maximum angle, in degree, that is allowed between tracking steps.
 
-* Length:
+* **Length**:
 
-* Algorithm:
+* **Algorithm**:
 
 ___
 #### Whole Pelvis
 
-* Use whole:
+* **Use whole**:
 
-* File path:
+* **File path**:
 
 
 
