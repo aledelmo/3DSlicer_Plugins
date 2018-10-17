@@ -1,6 +1,8 @@
 # TractographyPelvis
 This module aims to compensate the 3D Slicer lack of functionality regarding tractography algorithms. Here the MRTrix3
-methods, at the moment the state of the art for tractography, are wrapped to extend and enrich the Slicer framework.
+methods are wrapped to extend and enrich the Slicer framework.
+
+Please note that this plug-in implements external functionality. More specific indication can be found on the [MRTrix3][1] website.
 
 
 ## Installation
@@ -63,9 +65,9 @@ in millimeters (mm).
 
 * **Algorithm**: The algorithm selection allows for three different methodologies: deterministic diffusion tensor based (FACT),
 deterministic CSD based (SD_STREAM), probabilistic CSD based (iFOD2).
-    * FACT:
-    * SD_STREAM:
-    * iFOD2:
+    * [FACT][2]: In each voxel the fibers change their trajectories based on the principal diffusion tensor orientation.
+    * [SD_STREAM][3]: The fibers are reconstructed following the main direction of the FOD distribution for every point of the image.
+    * [iFOD2][4]: Probabilistic approach using the FOD to weight the possible fiber paths.
 
 ___
 #### Whole Pelvis
@@ -80,4 +82,7 @@ the whole body. The result will be saved on the disk instead of being loaded on 
 ## License
 
 
-
+[1]: http://www.mrtrix.org
+[2]: https://www.ncbi.nlm.nih.gov/pubmed/9989633
+[3]: https://onlinelibrary.wiley.com/doi/abs/10.1002/ima.22005
+[4]: https://www.researchgate.net/publication/285641884_Improved_probabilistic_streamlines_tractography_by_2nd_order_integration_over_fibre_orientation_distributions
