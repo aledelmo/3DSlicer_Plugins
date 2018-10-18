@@ -46,9 +46,9 @@ ___
 * **Input LabelMap**: The initial seed points search zone, that will eventually be propagated until all the 
 fibers are tracked down in their entire lengths. In the situation the searched output is a whole-pelvis tractogram 
 this field must correspond to a node with a body mask. For ROI-based tractogram two options are available: Standard LabelMap
-(*default*) and Binary Mask.
+(*default*) and Binary Mask. (*MANDATORY*)
     * Standard LabelMap: The seed mask is extracted directly from the IMAG2 label legend. The labels used are: 7 to 9, 15 to 27
-    (extremities included). Finally using the vertebral canal and all the sacral holes.
+    (extremities included). Using the vertebral canal and all the sacral holes.
     * Binary Mask: To use custom masks a label node can be specified (0: background, 1: seeds)
 
 * **Output Fiber Bundle**: output node where the tractography will be stored. This field is only needed in case of ROI-based tractogram.
@@ -85,11 +85,6 @@ ___
 the whole body. The result will be saved on the disk instead of being loaded on Slicer
 
 * **File path**: Specify a file path for the whole-pelvis file. The file extension must be .tck (the standard MRTrix3 tractogram format)
-
-## Team / Contacts
-
-## License
-
 
 [1]: http://www.mrtrix.org
 [2]: https://www.ncbi.nlm.nih.gov/pubmed/9989633
