@@ -11,20 +11,42 @@ Prerequisites: MRTrix3 and ANTs must be installed on the computer. Detailed inst
  <https://mrtrix.readthedocs.io/en/latest/installation/before_install.html> <br>
  <https://github.com/ANTsX/ANTs/wiki/>
 
-Note the folder path of the MRTrix3 binaries (e.g. /usr/local/bin), they will be used in the end.
+Note the folder path of the MRTrix3 binaries (e.g. /usr/local/bin), they will be used in the end.<br>
 Note the folder path of the ANTs binaries (e.g. /usr/local/antsbin/bin/), they will be used in the end.
 
 From the Slicer menu bar go on Edit --> Application Settings --> Modules
 
 In the Additional module path add the DiffusionPelvis folder and add it up to your favourite modules.
 
-Finally, change the path in config.json file, under the plug-in config folder, with the MRTrix3 and ANTs path syou noted in the beginning (alternatively,
+Finally, change the path in config.json file, under the plug-in config folder, with the MRTrix3 and ANTs paths you noted in the beginning (alternatively,
 in Unix-based system you can obtain the requested path writing in a terminal 'which mrview' and 'which antsRegistration')
 
 ## Usage
+The module works directly on a diffusion image node, to obtain one either proceed to the first step of this plug-in or use the standard
+module 'Diffusion-weighted DICOM Import' (despite the name it allows to import also from the NIfTI and NRRD formats).
+
+The three subsection of the plug-in can be considered independent from each other and be used in any order.
+___
+### Preprocessing
+This section performs the denoising, artifact correction and masking of diffusion weighted images. All the parameters are
+chosen automatically extracting the image information directly from the DICOM / NRRD headers.
+
+Additionally, a DWI node is created starting from the DICOM folder containing the raw data.
+
+* **Denoising**:
+* **Gibbs Artifact Removal**:
+* **Motion and Eddy currents correction**:
+* **Bias field correction**:
+* **Masking**:
+
+#### GUI
 
 
-### GUI
+___
+### Registration
+
+___
+### Measures
 
 
 [1]: http://www.mrtrix.org
