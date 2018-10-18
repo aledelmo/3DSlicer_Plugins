@@ -62,6 +62,24 @@ shape fluctuations are visible (they can be checked analyzing the image contour)
 
 ___
 ### Registration
+In order to use the segmentations carried on the volumetric structural image for tractography purposes (seeds positioning, segmentation, ...)
+the DWI and the T2 image must be in the same space and completely aligned. Here three types os registration options are offered:
+
+* **Rigid**: Combination of transformation that do not modify the distance between the points of the image. It will apply a
+series of rotation and translations in order to have the images roughly aligned.
+* **Affine**: Transformation that preserves parallel lines. Adding shears and scaling to the rigid transform a finer
+registration is prepared, with an higher chance to have the two images with matching proportions.
+* **Elastic**: The elastic deformation will shift and interpolate the voxels of the moving image in order to match as
+best as possible the fixed image intensities. It can results in the most accurate results at the expense of the computational
+time.
+
+All the registration methods above described are all implemented used ANTs. The parameters have been chosen with in mind the
+registration of a b0 image to the space of a volumetric T2w image.
+
+The methods do not need an initialization, the rigid and affine transforms are based on the images mutual information, while the
+elastic deformation checks for the cross-correlation. The process proceed iteratively until either the difference between the
+images is under a certain threshold or when the algorithm reaches a certain number of iterations. To improve the accuracy 
+the registration is performed at four different resolution level.
 
 #### GUI
 ___
