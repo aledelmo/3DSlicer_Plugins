@@ -759,8 +759,8 @@ class DiffusionPelvisLogic:
             except:
                 diff_dir = 25
 
-            win_size = 2
-            while win_size ** 3 < diff_dir:
+            win_size = 0
+            while win_size ** 3 <= diff_dir:
                 win_size += 1
             win_size = max(round_down_to_odd(win_size), 3)
             win_size = str(win_size)
