@@ -11,7 +11,7 @@ Note the folder path of the MRTrix3 binaries (e.g. /usr/local/bin), they will be
 
 From the Slicer menu bar go on Edit --> Application Settings --> Modules
 
-In the Additional module path add the DiffusionPelvis folder and add it up to your favourite modules.
+In the Additional module path add the TractographyPelvis folder and add it up to your favourite modules.
 
 Finally, change the path in config.json file, under the plug-in config folder, with the MRTrix3 path you noted in the beginning (alternatively,
 in Unix-based system you can obtain the requested path writing in a terminal 'which mrview')
