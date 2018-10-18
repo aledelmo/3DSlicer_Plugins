@@ -954,15 +954,18 @@ class DiffusionPelvisLogic:
                 self.my_env)
 
             pipe(
-                'mrresize DWIWarped.mif DWIWarped.nii -size ' + ','.join(str(n) for n in in_size[0:3]), True, self.my_env)
+                'mrresize DWIWarped.mif DWIWarped.nii -size ' + ','.join(str(n) for n in in_size[0:3]), True,
+                self.my_env)
 
         return os.path.join(self.tmp, 'DWIWarped.nii')
 
     def extract(self, data_path, bvals, bvecs, mask, switch):
         if switch['b0'] is True:
             metric_path = os.path.join(self.tmp, 'b0.nii')
-            pipe('dwiextract -force ' + data_path + ' -bzero ' + metric_path + '  -fslgrad ' + bvecs + ' ' + bvals,
-                 True, self.my_env)
+            pipe(
+                'dwiextract -force ' + data_path + ' -  -bzero -fslgrad ' + bvecs + ' ' + bvals +
+                ' | mrmath - mean ' + metric_path + ' -axis 3',
+                True, self.my_env)
         if switch['fa'] is True:
             metric_path = os.path.join(self.tmp, 'fa.nii')
             cmd = 'dwi2tensor -force ' + data_path + ' ' + os.path.join(self.tmp,
