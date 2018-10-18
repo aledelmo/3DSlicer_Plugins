@@ -963,7 +963,7 @@ class DiffusionPelvisLogic:
         if switch['b0'] is True:
             metric_path = os.path.join(self.tmp, 'b0.nii')
             pipe(
-                'dwiextract -force ' + data_path + ' -  -bzero -fslgrad ' + bvecs + ' ' + bvals +
+                'dwiextract -force ' + data_path + ' - -bzero -fslgrad ' + bvecs + ' ' + bvals +
                 ' | mrmath - mean ' + metric_path + ' -axis 3',
                 True, self.my_env)
         if switch['fa'] is True:
