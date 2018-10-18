@@ -81,7 +81,16 @@ elastic deformation checks for the cross-correlation. The process proceed iterat
 images is under a certain threshold or when the algorithm reaches a certain number of iterations. To improve the accuracy 
 the registration is performed at four different resolution level.
 
+Please note that the elastic deformation is a computationally intensive operation and could take a long time (up to some hours).
+
 #### GUI
+The registration is performed between a DWI (moving image) and a volumetric strutural image (fixed image). The wholy body masks
+can be used to constrain the computation to the portion of the images carrying anatomical information. If only one mask is 
+specified it will be ignored. We generally suggest using the masks only for the elastic deformation.
+
+Three registration options are present, that should be set analyzing how much the two images are disaligned.
+The elastic deformation can be additionaly fine tuned choosing a preset that controls the termination conditions. A more
+strong deformation will force a more strict similarity control but could cause overfitting.
 ___
 ### Measures
 In this section it is possible to extract metric maps and volume nodes from the DWI volumes. All the metrics are computed
