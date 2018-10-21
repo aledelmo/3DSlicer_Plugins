@@ -1,4 +1,4 @@
-# TractographyPelvis
+# Tractography Pelvis
 This module aims to compensate the 3D Slicer lack of functionality regarding tractography algorithms. Here the MRTrix3
 methods are wrapped to extend and enrich the Slicer framework.
 
@@ -18,7 +18,7 @@ in Unix-based system you can obtain the requested path writing in a terminal 'wh
 
 ## Usage
 
-The module works directly on a diffusion image node, to obtain one load your diffusion data either using the DiffusionPelvis plug-in or the standard
+The module works directly on a diffusion image node, to obtain one load your diffusion data either using the [DiffusionPelvis][5] plug-in or the standard
 module 'Diffusion-weighted DICOM Import' (despite the name it allows to import also from the NIfTI and NRRD formats).
 
 We suggest to always denoise the image before preparing the tractogram.
@@ -90,3 +90,4 @@ the whole body. The result will be saved on the disk instead of being loaded on 
 [2]: https://www.ncbi.nlm.nih.gov/pubmed/9989633
 [3]: https://onlinelibrary.wiley.com/doi/abs/10.1002/ima.22005
 [4]: https://www.researchgate.net/publication/285641884_Improved_probabilistic_streamlines_tractography_by_2nd_order_integration_over_fibre_orientation_distributions
+[5]: https://github.com/aledelmo/3DSlicer_Plugins/tree/master/DiffusionPelvis

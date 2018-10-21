@@ -1,9 +1,9 @@
-# DiffusionPelvis
-This module provides the three most important steps for the exploitation of diffusion images for tractography purpouses:
-denoising, registration and metrix extraction.
-In opposition to other Slicer modules, this one does not requires intermediate steps and works directly on the DWI image node.
+# Diffusion Pelvis
+This module provides the three most important steps for the exploitation of diffusion images for tractography purposes:
+denoising, registration and metric volumes extraction.
+Contrary to other Slicer modules, this one does not requires intermediate steps and works directly on DWI image nodes.
 
-Please note that this plug-in implements external softwares. More specific indication can be found on the [MRTrix3][1], [FSL][3]
+Please note that this plug-in implements external software. More specific indication can be found on the [MRTrix3][1], [FSL][3]
 and [ANTs][2] websites.
 
 ## Installation
@@ -22,7 +22,7 @@ Finally, change the path in config.json file, under the plug-in config folder, w
 in Unix-based system you can obtain the requested path writing in a terminal 'which mrview' and 'which antsRegistration')
 
 ## Usage
-The module works directly on a diffusion image node, to obtain one either proceed to the first step of this plug-in or use the standard
+The module works directly on diffusion image nodes, to obtain one either proceed to the first step of this plug-in or use the standard
 module 'Diffusion-weighted DICOM Import' (despite the name it allows to import also from the NIfTI and NRRD formats).
 
 The three subsection of the plug-in can be considered independent from each other and can be used in any order.
@@ -81,6 +81,9 @@ elastic deformation checks for the cross-correlation. The process proceed iterat
 images is under a certain threshold or when the algorithm reaches a certain number of iterations. To improve the accuracy 
 the registration is performed at four different resolution level.
 
+Performing the registration on image corrected from field inhomogeneities (using the first section of this plug-in) could substantially improve
+the results.
+
 Please note that the elastic deformation is a computationally intensive operation and could take a long time (up to some hours).
 
 #### GUI
@@ -106,7 +109,7 @@ and how accentuated that is in respect to the others. It is often the starting a
 taking the mean of all the direction vectors.
 
 #### GUI
-Straightfoward module. The interface is simply composed by two node selector (one for input DWI image, one for the output volume
+Straightforward module. The interface is simply composed by two node selector (one for input DWI image, one for the output volume
 node) and a set of radio button to specify the metric wanted. Click 'Extract' to launch the computation
 
 [1]: http://www.mrtrix.org
