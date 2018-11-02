@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import ctk
 import os
 import qt
@@ -82,8 +79,8 @@ class BladderSegmentationWidget:
         parameters_form_layout.addRow("Input MRI Volume: ", self.inputSelector)
 
         self.markups_selector = slicer.qSlicerSimpleMarkupsWidget()
-        self.markups_selector.objectName = 'arteryFiducialsNodeSelector'
-        self.markups_selector.setNodeBaseName("OriginSeedsArteries")
+        self.markups_selector.objectName = 'bladderFiducialsNodeSelector'
+        self.markups_selector.setNodeBaseName("OriginSeedsBladder")
         self.markups_selector.defaultNodeColor = qt.QColor(255, 192, 103)
         self.markups_selector.maximumHeight = 150
         self.markups_selector.markupsSelectorComboBox().noneEnabled = False
@@ -173,7 +170,7 @@ class BladderSegmentationWidget:
 
     def on_reload_and_test(self):
         try:
-            self.onReload()
+            self.on_reload()
             test = slicer.selfTests[self.module_name]
             test()
         except Exception:
