@@ -360,12 +360,12 @@ class TractographyPelvisWidget:
         self.sliderMaxangle.value = 45.
         self.sliderMaxangle.spinBoxVisible = True
 
-        tractoFormLayout.addRow('Admissible Angle', self.sliderMaxangle)
+        tractoFormLayout.addRow('Admissible Angle (\xB0)', self.sliderMaxangle)
 
         self.sliderLength = ctk.ctkRangeWidget()
         self.sliderLength.setRange(1, 800)
         self.sliderLength.setValues(50, 800)
-        tractoFormLayout.addRow('Length', self.sliderLength)
+        tractoFormLayout.addRow('Length (mm)', self.sliderLength)
 
         self.combo_tract = qt.QComboBox()
         self.combo_tract.insertItem(0, 'DTI - Deterministic - FACT')
