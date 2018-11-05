@@ -37,7 +37,7 @@ class BonesSegmentation:
         # IMAG2: Add the corresponding icon to the module
         self.moduleName = self.__class__.__name__
         moduleDir = os.path.dirname(self.parent.path)
-        iconPath = os.path.join(moduleDir, 'Resources/Icons', self.moduleName + '.png')
+        iconPath = os.path.join(moduleDir, 'Resources/Icons', 'icon.jpg')
         if os.path.isfile(iconPath):
             parent.icon = qt.QIcon(iconPath)
 
