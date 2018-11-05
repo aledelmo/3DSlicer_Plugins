@@ -528,7 +528,7 @@ class TractographyPelvisWidget:
             seeds_path = os.path.join(self.logic.tmp, 'seeds.nii')
             properties = {}
             properties['useCompression'] = 0
-            if (not self.radio_whole.isChecked()) or (not self.radio_l.isChecked()):
+            if (not self.radio_whole.isChecked()) and self.radio_p.isChecked():
                 label_list = [n for n in range(15, 28)] + [n for n in range(7, 10)]
                 temp_seed_node = slicer.vtkSlicerVolumesLogic().CloneVolume(slicer.mrmlScene, self.seedsNode, 'out',
                                                                             True)
@@ -540,6 +540,7 @@ class TractographyPelvisWidget:
                 slicer.util.saveNode(temp_seed_node, seeds_path, properties)
                 slicer.mrmlScene.RemoveNode(temp_seed_node)
             else:
+                self.radio_l.setChecked(True)
                 slicer.util.saveNode(self.seedsNode, seeds_path, properties)
 
             if self.exclusionNode:
