@@ -364,7 +364,7 @@ class TractographyPelvisWidget:
 
         self.sliderLength = ctk.ctkRangeWidget()
         self.sliderLength.setRange(1, 800)
-        self.sliderLength.setValues(5, 200)
+        self.sliderLength.setValues(50, 800)
         tractoFormLayout.addRow('Length', self.sliderLength)
 
         self.combo_tract = qt.QComboBox()
