@@ -37,7 +37,7 @@ class BonesSegmentation:
         # IMAG2: Add the corresponding icon to the module
         self.moduleName = self.__class__.__name__
         moduleDir = os.path.dirname(self.parent.path)
-        iconPath = os.path.join(moduleDir, 'Resources/Icons', 'icon.jpg')
+        iconPath = os.path.join(moduleDir, 'Resources', 'icon.jpg')
         if os.path.isfile(iconPath):
             parent.icon = qt.QIcon(iconPath)
 
@@ -238,7 +238,10 @@ class BonesSegmentationWidget:
         mov = self.volumeSelectors['Moving'].currentNode()  # moving image
         trans = self.volumeSelectors['Transformed'].currentNode()  # transformed image
         transName = "%s-transformed" % mov.GetName()
-        transNode = slicer.util.getNode(transName)
+        try:
+            transNode = slicer.util.getNode(transName)
+        except slicer.util.MRMLNodeNotFoundException:
+            transNode = None
 
         slicer.util.showStatusMessage("Processing...", 2000)
         # IMAG2: harden transform
@@ -283,7 +286,10 @@ class BonesSegmentationWidget:
         CLINode = slicer.cli.run(slicer.modules.thresholdscalarvolume, None, parametersTh, wait_for_completion=True)
 
         display = outputNode.GetDisplayNode()
-        labelColorTable = slicer.util.getNode('GenericAnatomyColors')
+        try:
+            labelColorTable = slicer.util.getNode('GenericAnatomyColors')
+        except slicer.util.MRMLNodeNotFoundException:
+            labelColorTable = None
         display.SetAndObserveColorNodeID(labelColorTable.GetID())
 
         # IMAG2: model maker
@@ -435,48 +441,78 @@ class BonesSegmentationWidget:
         # Loading of the correct Template Volume
         if sexLabel == 0:  # Male patient
             if 0 <= ageLabel <= 1:
-                VolumePath = os.path.join(ModuleDir, 'Bones Templates', 'scanner7moisM.nii')
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'M_M7.nii')
                 slicer.util.loadVolume(VolumePath)
-                VolumeNode = slicer.util.getNode('scanner7moisM')
+                try:
+                    VolumeNode = slicer.util.getNode('M_M7')
+                except slicer.util.MRMLNodeNotFoundException:
+                    VolumeNode = None
             if 1 < ageLabel <= 3:
-                VolumePath = os.path.join(ModuleDir, 'Bones Templates', 'scanner2ansM.nii')
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y2.nii')
                 slicer.util.loadVolume(VolumePath)
-                VolumeNode = slicer.util.getNode('scanner2ansM')
+                try:
+                    VolumeNode = slicer.util.getNode('M_Y2')
+                except slicer.util.MRMLNodeNotFoundException:
+                    VolumeNode = None
             if 3 < ageLabel <= 8:
-                VolumePath = os.path.join(ModuleDir, 'Bones Templates', 'scanner4ansM.nii')
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y4.nii')
                 slicer.util.loadVolume(VolumePath)
-                VolumeNode = slicer.util.getNode('scanner4ansM')
+                try:
+                    VolumeNode = slicer.util.getNode('M_Y4')
+                except slicer.util.MRMLNodeNotFoundException:
+                    VolumeNode = None
             if 8 < ageLabel <= 15:
-                VolumePath = os.path.join(ModuleDir, 'Bones Templates', 'scanner9ansM.nii')
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y9.nii')
                 slicer.util.loadVolume(VolumePath)
-                VolumeNode = slicer.util.getNode('scanner9ansM')
+                try:
+                    VolumeNode = slicer.util.getNode('M_Y9')
+                except slicer.util.MRMLNodeNotFoundException:
+                    VolumeNode = None
             if 15 < ageLabel <= 20:
-                VolumePath = os.path.join(ModuleDir, 'Bones Templates', 'scanner15ansM.nii')
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y15.nii')
                 slicer.util.loadVolume(VolumePath)
-                VolumeNode = slicer.util.getNode('scanner15ansM')
+                try:
+                    VolumeNode = slicer.util.getNode('M_Y15')
+                except slicer.util.MRMLNodeNotFoundException:
+                    VolumeNode = None
         else:  # Female patient
             if 0 <= ageLabel <= 1:
-                VolumePath = os.path.join(ModuleDir, 'Bones Templates', 'scanner7moisM.nii')
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y2.nii')
                 slicer.util.loadVolume(VolumePath)
-                VolumeNode = slicer.util.getNode('scanner7moisM')
+                try:
+                    VolumeNode = slicer.util.getNode('F_Y2')
+                except slicer.util.MRMLNodeNotFoundException:
+                    VolumeNode = None
             if 1 < ageLabel <= 3:
-                VolumePath = os.path.join(ModuleDir, 'Bones Templates', 'scanner2ansF.nii')
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y2.nii')
                 slicer.util.loadVolume(VolumePath)
-                VolumeNode = slicer.util.getNode('scanner2ansF')
+                try:
+                    VolumeNode = slicer.util.getNode('F_Y2')
+                except slicer.util.MRMLNodeNotFoundException:
+                    VolumeNode = None
             if 3 < ageLabel <= 8:
-                VolumePath = os.path.join(ModuleDir, 'Bones Templates', 'scanner4ansF.nii')
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y4.nii')
                 slicer.util.loadVolume(VolumePath)
-                VolumeNode = slicer.util.getNode('scanner4ansF')
+                try:
+                    VolumeNode = slicer.util.getNode('F_Y4')
+                except slicer.util.MRMLNodeNotFoundException:
+                    VolumeNode = None
             if 8 < ageLabel <= 13:
-                VolumePath = os.path.join(ModuleDir, 'Bones Templates', 'scanner9ansF.nii')
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y9.nii')
                 slicer.util.loadVolume(VolumePath)
-                VolumeNode = slicer.util.getNode('scanner9ansF')
+                try:
+                    VolumeNode = slicer.util.getNode('F_Y9')
+                except slicer.util.MRMLNodeNotFoundException:
+                    VolumeNode = None
             if 13 < ageLabel <= 20:
                 # VolumePath = os.path.join(ModuleDir, 'Bones Templates', 'scanner15ansF.nii')
-                VolumePath = os.path.join(ModuleDir, 'Bones Templates', 'IRM16ansF.nii')
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y16.nii')
                 slicer.util.loadVolume(VolumePath)
-                VolumeNode = slicer.util.getNode('IRM16ansF')
-        #
+                try:
+                    VolumeNode = slicer.util.getNode('F_Y16')
+                except slicer.util.MRMLNodeNotFoundException:
+                    VolumeNode = None
+                #
         #
         #
         fixedID = self.volumeDialogSelectors['Fixed'].currentNodeID
@@ -491,8 +527,16 @@ class BonesSegmentationWidget:
 
             # IMAG2: center fixed and moving volumes
             VolumesLogic = slicer.modules.volumes.logic()
-            VolumesLogic.CenterVolume(slicer.util.getNode(fix.GetName()))
-            VolumesLogic.CenterVolume(slicer.util.getNode(mov.GetName()))
+            try:
+                temp = slicer.util.getNode(fix.GetName())
+            except slicer.util.MRMLNodeNotFoundException:
+                temp = None
+            VolumesLogic.CenterVolume(temp)
+            try:
+                temp = slicer.util.getNode(mov.GetName())
+            except slicer.util.MRMLNodeNotFoundException:
+                temp = None
+            VolumesLogic.CenterVolume(temp)
             # create transform and transformed if needed
             transform = self.transformSelector.currentNode()
             if not transform:
@@ -503,8 +547,10 @@ class BonesSegmentationWidget:
                 volumesLogic = slicer.modules.volumes.logic()
                 moving = self.volumeSelectors['Moving'].currentNode()
                 transformedName = "%s-transformed" % moving.GetName()
-                transformed = slicer.util.getNode(transformedName)
-
+                try:
+                    transformed = slicer.util.getNode(transformedName)
+                except slicer.util.MRMLNodeNotFoundException:
+                    transformed = None
                 if not transformed:
                     transformed = volumesLogic.CloneVolume(slicer.mrmlScene, moving, transformedName)
                 transformed.SetAndObserveTransformNodeID(transform.GetID())
@@ -882,7 +928,7 @@ class BonesSegmentationLogic:
         # 135,135,84
         displayNode.SetTextScale(6.)
         displayNode.SetGlyphScale(6.)
-        displayNode.SetGlyphTypeFromString('Sphere3D')  # ('StarBurst2D')
+        displayNode.SetGlyphTypeFromString('Sphere3D')
         displayNode.SetColor((1, 0, 0))  # ((1,1,0.4))
         displayNode.SetSelectedColor((1, 0, 0))  # ((1,1,0))
         # displayNode.GetAnnotationTextDisplayNode().SetColor((1,1,0))
@@ -901,10 +947,16 @@ class BonesSegmentationLogic:
 
         # make the fiducial list if required
         listName = associatedNode.GetName() + "-landmarks"
-        fiducialList = slicer.util.getNode(listName)
+        try:
+            fiducialList = slicer.util.getNode(listName)
+        except slicer.util.MRMLNodeNotFoundException:
+            fiducialList = None
         if not fiducialList:
             fiducialListNodeID = markupsLogic.AddNewFiducialNode(listName, slicer.mrmlScene)
-            fiducialList = slicer.util.getNode(fiducialListNodeID)
+            try:
+                fiducialList = slicer.util.getNode(fiducialListNodeID)
+            except slicer.util.MRMLNodeNotFoundException:
+                fiducialList = None
             if associatedNode:
                 fiducialList.SetAttribute("AssociatedNodeID", associatedNode.GetID())
             self.setFiducialListDisplay(fiducialList)
@@ -937,7 +989,10 @@ class BonesSegmentationLogic:
         fiducialList.SetNthFiducialSelected(fiducialIndex, False)
         fiducialList.SetNthMarkupLocked(fiducialIndex, False)
 
-        originalActiveList = slicer.util.getNode(originalActiveListID)
+        try:
+            originalActiveList = slicer.util.getNode(originalActiveListID)
+        except slicer.util.MRMLNodeNotFoundException:
+            originalActiveList = None
         if originalActiveList:
             markupsLogic.SetActiveListID(originalActiveList)
         slicer.mrmlScene.EndState(slicer.mrmlScene.BatchProcessState)
@@ -983,7 +1038,10 @@ class BonesSegmentationLogic:
         if not volumeNode:
             return None
         listName = volumeNode.GetName() + "-landmarks"
-        listNode = slicer.util.getNode(listName)
+        try:
+            listNode = slicer.util.getNode(listName)
+        except slicer.util.MRMLNodeNotFoundException:
+            listNode = None
         if listNode:
             if listNode.GetAttribute("AssociatedNodeID") != volumeNode.GetID():
                 self.setFiducialListDisplay(listNode)
@@ -1062,7 +1120,10 @@ class BonesSegmentationLogic:
                     if associatedID in volumeNodeIDs:
                         # found one, so add it as a landmark
                         landmarkPosition = fiducialList.GetMarkupPointVector(fiducialIndex, 0)
-                        volumeNode = slicer.util.getNode(associatedID)
+                        try:
+                            volumeNode = slicer.util.getNode(associatedID)
+                        except slicer.util.MRMLNodeNotFoundException:
+                            volumeNode = None
                         # if new fiducial is associated with moving volume,
                         # then map the position back to where it would have been
                         # if it were not transformed, if not, then calculate where
