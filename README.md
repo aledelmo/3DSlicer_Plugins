@@ -20,7 +20,8 @@ These four plug-ins compose the basic IMAG2 software suite. It can be complement
 * [Tractography Metrics]: tool for the analysis of fiber bundles.
 * [Vessel Segmentation]: deep-learning based approach for the automatic recognition of veins and arteries.
 * [IMAG2 Utilities]: collection of various scripts.
-* [IMAG2 Website]: the completely redesigned team website (<https://aledelmo.000webhostapp.com>)
+* [IMAG2 Website]: the completely redesigned team website (<http://www.imag2.org>)
+* [IMAG2 Docs]: general and process documentation
 
  License
 ----
@@ -38,3 +39,4 @@ Apache License 2.0
    [TractographyPelvis]: https://github.com/aledelmo/3DSlicer_Plugins/tree/master/TractographyPelvis
    [Bladder]: https://github.com/aledelmo/3DSlicer_Plugins/tree/master/Bladder
    [Bones]: https://github.com/aledelmo/3DSlicer_Plugins/tree/master/Bones
+   [IMAG2 Docs]: <https://github.com/aledelmo/IMAG2_docs>
