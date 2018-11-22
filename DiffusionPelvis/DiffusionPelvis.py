@@ -739,7 +739,15 @@ class DiffusionPelvisLogic:
             for dirName, subdirList, fileList in os.walk(dir):
                 for filename in fileList:
                     lstFilesDCM.append(os.path.join(dirName, filename))
-            RefDs = dicom.read_file(lstFilesDCM[0])
+            flag = True
+            i = 0
+            while flag:
+                try:
+                    RefDs = dicom.read_file(lstFilesDCM[i])
+                    flag = False
+                except:
+                    i += 1
+
             try:
                 if RefDs.InPlanePhaseEncodingDirection == 'COL':
                     phase_encoding_direction = 'AP '
