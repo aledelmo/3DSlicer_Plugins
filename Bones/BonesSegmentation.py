@@ -242,6 +242,8 @@ class BonesSegmentationWidget:
             transNode = slicer.util.getNode(transName)
         except slicer.util.MRMLNodeNotFoundException:
             transNode = None
+        fixName = fix.GetName()
+        fixNode = slicer.util.getNode(fixName)
 
         slicer.util.showStatusMessage("Processing...", 2000)
         # IMAG2: harden transform
