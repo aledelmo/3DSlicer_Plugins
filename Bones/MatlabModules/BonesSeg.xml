@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<executable>
+  <category>Matlab</category>
+  <title>Pelvic Bones Segmentation IMAG2</title>
+  <description><![CDATA[Perform the segmentation of the pelvic bones on T2 MRI.]]></description>
+  <version>0.0.0.1</version>
+  <documentation-url>http://www.slicer.org/slicerWiki/index.php/Documentation/Nightly/Extensions/MatlabBridge</documentation-url>
+  <license/>
+  <contributor>Alessio Virzi' (IMAG2)</contributor>
+  <acknowledgements><![CDATA[.....]]></acknowledgements>
+  <parameters>
+    <label>Input</label>
+    <description><![CDATA[Input parameters]]></description>
+    <image>
+      <label>Input T2 MRI volume</label>
+      <description><![CDATA[T2 volume to segment]]></description>
+      <longflag>inputvolumeMR</longflag>
+      <channel>input</channel>
+    </image>
+    <image>
+      <label>Input Presegmentation Mask</label>
+      <description><![CDATA[Presegmentation mask (obtained by the landmark registration)]]></description>
+      <longflag>inputvolumePRE</longflag>
+      <channel>input</channel>
+    </image>
+  </parameters>
+  <parameters>
+    <label>Output</label>
+    <description> output</description>
+    <image>
+      <label>Output Segmentation</label>
+      <description><![CDATA[Label map containing the segmentation]]></description>
+      <longflag>outputvolume</longflag>
+      <channel>output</channel>
+    </image>  
+  </parameters>
+</executable>

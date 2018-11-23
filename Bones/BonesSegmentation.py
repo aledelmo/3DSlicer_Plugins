@@ -268,6 +268,7 @@ class BonesSegmentationWidget:
         CreateLogic = ModelLogic.CreateNode()
         # inputNode=slicer.util.getNode('scanner15ansM')
         inputNode = transNode
+        inputNodeMRI = fixNode
         outputNode = slicer.vtkMRMLLabelMapVolumeNode()
         # outputNode.SetName("%s-Bones-label" % inputNode.GetName())
         outputNode.SetName("%s-Bones-label" % fix.GetName())
@@ -284,6 +285,13 @@ class BonesSegmentationWidget:
         parametersTh['OutsideValue'] = 2
         CLINode = None
         CLINode = slicer.cli.run(slicer.modules.thresholdscalarvolume, None, parametersTh, wait_for_completion=True)
+
+        bonesParams = {}
+        bonesParams['inputvolumeMR'] = inputNodeMRI.GetID()
+        bonesParams['inputvolumePRE'] = inputNode.GetID()
+        bonesParams['outputvolume'] = outputNode.GetID()
+        CLINode_b = None
+        CLINode_b = slicer.cli.run(slicer.modules.bonesseg, None, bonesParams, wait_for_completion=True)
 
         display = outputNode.GetDisplayNode()
         try:
