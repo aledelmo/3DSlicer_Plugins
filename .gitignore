@@ -108,3 +108,6 @@ venv.bak/
 
 # pycharm
 .idea/
+
+# old
+Bones/.old_templates/
