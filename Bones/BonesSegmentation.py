@@ -92,45 +92,18 @@ class BonesSegmentationWidget:
     def setup(self):
         """Instantiate and connect widgets ..."""
 
-        if self.developerMode:
-            #
-            # Reload and Test area
-            #
-            """Developer interface"""
-            reloadCollapsibleButton = ctk.ctkCollapsibleButton()
-            reloadCollapsibleButton.text = "Advanced - Reload && Test"
-            reloadCollapsibleButton.collapsed = False
-            self.layout.addWidget(reloadCollapsibleButton)
-            reloadFormLayout = qt.QFormLayout(reloadCollapsibleButton)
-
-            # reload button
-            # (use this during development, but remove it when delivering
-            #  your module to users)
-            self.reloadButton = qt.QPushButton("Reload")
-            self.reloadButton.toolTip = "Reload this module."
-            self.reloadButton.name = "BonesSegmentation Reload"
-            reloadFormLayout.addWidget(self.reloadButton)
-            self.reloadButton.connect('clicked()', self.onReload)
-
-            # reload and test button
-            # (use this during development, but remove it when delivering
-            #  your module to users)
-            self.reloadAndTestButton = qt.QPushButton("Reload and Test")
-            self.reloadAndTestButton.toolTip = "Reload this module and then run the self tests."
-            reloadFormLayout.addWidget(self.reloadAndTestButton)
-            self.reloadAndTestButton.connect('clicked()', self.onReloadAndTest)
-
-            # reload and run specific tests
-            scenarios = ("Basic", "Affine", "ThinPlate", "VTKv6Picking")
-            for scenario in scenarios:
-                button = qt.QPushButton("Reload and Test %s" % scenario)
-                self.reloadAndTestButton.toolTip = "Reload this module and then run the %s self test." % scenario
-                reloadFormLayout.addWidget(button)
-                button.connect('clicked()', lambda s=scenario: self.onReloadAndTest(scenario=s))
-
-        self.selectVolumesButton = qt.QPushButton("Select Volume To Segment")
+        self.selectVolumesButton = qt.QPushButton("Show Pop-Up Selector")
         self.selectVolumesButton.connect('clicked(bool)', self.enter)
         self.layout.addWidget(self.selectVolumesButton)
+
+        #
+        # IMAG2: Apply Button (harden transform + image resampling)
+        #
+        self.applyButton = qt.QPushButton("Segment")
+        self.applyButton.toolTip = "Segment!"
+        self.applyButton.enabled = True
+        self.layout.addWidget(self.applyButton)
+        self.applyButton.connect('clicked(bool)', self.onApplyButton)
 
         self.interfaceFrame = qt.QWidget(self.parent)
         self.interfaceFrame.setLayout(qt.QVBoxLayout())
@@ -140,7 +113,7 @@ class BonesSegmentationWidget:
         # Parameters Area
         #
         parametersCollapsibleButton = ctk.ctkCollapsibleButton()
-        parametersCollapsibleButton.text = "Parameters"
+        parametersCollapsibleButton.text = "Hips Segmentation"
         self.interfaceFrame.layout().addWidget(parametersCollapsibleButton)
         parametersFormLayout = qt.QFormLayout(parametersCollapsibleButton)
 
@@ -157,7 +130,7 @@ class BonesSegmentationWidget:
             self.volumeSelectors[viewName].setMRMLScene(slicer.mrmlScene)
             self.volumeSelectors[viewName].setToolTip("Pick the %s volume." % viewName.lower())
             self.volumeSelectors[viewName].enabled = False
-            parametersFormLayout.addRow("%s Volume " % viewName, self.volumeSelectors[viewName])
+            # parametersFormLayout.addRow("%s Volume " % viewName, self.volumeSelectors[viewName])
 
         self.volumeSelectors["Transformed"].addEnabled = True
         self.volumeSelectors["Transformed"].selectNodeUponCreation = True
@@ -177,11 +150,21 @@ class BonesSegmentationWidget:
         self.transformSelector.enabled = False
         # parametersFormLayout.addRow("Target Transform ", self.transformSelector)
 
+        self.visualizationWidget = RegistrationLib.VisualizationWidget(self.logic)
+        self.visualizationWidget.connect("layoutRequested(mode,volumesToShow)", self.onLayout)
+        parametersFormLayout.addRow(self.visualizationWidget.widget)
+
         #
         # IMAG2: Landmarks Widget - just the add button changing the RegistrationLib into MyRegistrationLib
         # - manages landmarks
         #
-        self.landmarksWidget = MyRegistrationLib.myLandmarksWidget(self.logic)
+        # self.landmarksWidget = MyRegistrationLib.myLandmarksWidget(self.logic)
+        # self.landmarksWidget.connect("landmarkPicked(landmarkName)", self.onLandmarkPicked)
+        # self.landmarksWidget.connect("landmarkMoved(landmarkName)", self.onLandmarkMoved)
+        # self.landmarksWidget.connect("landmarkEndMoving(landmarkName)", self.onLandmarkEndMoving)
+        # parametersFormLayout.addRow(self.landmarksWidget.widget)
+
+        self.landmarksWidget = RegistrationLib.LandmarksWidget(self.logic)
         self.landmarksWidget.connect("landmarkPicked(landmarkName)", self.onLandmarkPicked)
         self.landmarksWidget.connect("landmarkMoved(landmarkName)", self.onLandmarkMoved)
         self.landmarksWidget.connect("landmarkEndMoving(landmarkName)", self.onLandmarkEndMoving)
@@ -221,17 +204,46 @@ class BonesSegmentationWidget:
         # listen to the scene
         self.addObservers()
 
+
         # Add vertical spacer
         self.layout.addStretch(1)
 
-        #
-        # IMAG2: Apply Button (harden transform + image resampling)
-        #
-        self.applyButton = qt.QPushButton("Apply")
-        self.applyButton.toolTip = "Segment!"
-        self.applyButton.enabled = True
-        parametersFormLayout.addRow(self.applyButton)
-        self.applyButton.connect('clicked(bool)', self.onApplyButton)
+        if self.developerMode:
+
+            def create_hor_layout(elements):
+                widget = qt.QWidget()
+                row_layout = qt.QHBoxLayout()
+                widget.setLayout(row_layout)
+                for element in elements:
+                    row_layout.addWidget(element)
+                return widget
+
+            """Developer interface"""
+            reload_collapsible_button = ctk.ctkCollapsibleButton()
+            reload_collapsible_button.text = "Reload && Test"
+            self.layout.addWidget(reload_collapsible_button)
+            reload_form_layout = qt.QFormLayout(reload_collapsible_button)
+
+            reload_button = qt.QPushButton("Reload")
+            reload_button.toolTip = "Reload this module."
+            reload_button.name = "ScriptedLoadableModuleTemplate Reload"
+            reload_button.connect('clicked()', self.onReload)
+
+            reload_and_test_button = qt.QPushButton("Reload and Test")
+            reload_and_test_button.toolTip = "Reload this module and then run the self tests."
+            reload_and_test_button.connect('clicked()', self.onReloadAndTest)
+
+            edit_source_button = qt.QPushButton("Edit")
+            edit_source_button.toolTip = "Edit the module's source code."
+            edit_source_button.connect('clicked()', self.on_edit_source)
+
+            restart_button = qt.QPushButton("Restart Slicer")
+            restart_button.toolTip = "Restart Slicer"
+            restart_button.name = "ScriptedLoadableModuleTemplate Restart"
+            restart_button.connect('clicked()', slicer.app.restart)
+
+            reload_form_layout.addWidget(
+                create_hor_layout([reload_button, reload_and_test_button, edit_source_button, restart_button]))
 
     def onApplyButton(self):
         fix = self.volumeSelectors['Fixed'].currentNode()  # fixed image
@@ -451,35 +463,35 @@ class BonesSegmentationWidget:
         # Loading of the correct Template Volume
         if sexLabel == 0:  # Male patient
             if 0 <= ageLabel <= 1:
-                VolumePath = os.path.join(ModuleDir, 'Templates', 'M_M7.nii')
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'M_M7.nrrd')
                 slicer.util.loadVolume(VolumePath)
                 try:
                     VolumeNode = slicer.util.getNode('M_M7')
                 except slicer.util.MRMLNodeNotFoundException:
                     VolumeNode = None
-            if 1 < ageLabel <= 3:
-                VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y2.nii')
+            elif 1 < ageLabel <= 3:
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y2.nrrd')
                 slicer.util.loadVolume(VolumePath)
                 try:
                     VolumeNode = slicer.util.getNode('M_Y2')
                 except slicer.util.MRMLNodeNotFoundException:
                     VolumeNode = None
-            if 3 < ageLabel <= 8:
-                VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y4.nii')
+            elif 3 < ageLabel <= 8:
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y4.nrrd')
                 slicer.util.loadVolume(VolumePath)
                 try:
                     VolumeNode = slicer.util.getNode('M_Y4')
                 except slicer.util.MRMLNodeNotFoundException:
                     VolumeNode = None
-            if 8 < ageLabel <= 15:
-                VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y9.nii')
+            elif 8 < ageLabel <= 15:
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y9.nrrd')
                 slicer.util.loadVolume(VolumePath)
                 try:
                     VolumeNode = slicer.util.getNode('M_Y9')
                 except slicer.util.MRMLNodeNotFoundException:
                     VolumeNode = None
-            if 15 < ageLabel <= 20:
-                VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y15.nii')
+            else:
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y15.nrrd')
                 slicer.util.loadVolume(VolumePath)
                 try:
                     VolumeNode = slicer.util.getNode('M_Y15')
@@ -487,36 +499,35 @@ class BonesSegmentationWidget:
                     VolumeNode = None
         else:  # Female patient
             if 0 <= ageLabel <= 1:
-                VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y2.nii')
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'F_M7.nrrd')
                 slicer.util.loadVolume(VolumePath)
                 try:
                     VolumeNode = slicer.util.getNode('F_Y2')
                 except slicer.util.MRMLNodeNotFoundException:
                     VolumeNode = None
-            if 1 < ageLabel <= 3:
-                VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y2.nii')
+            elif 1 < ageLabel <= 3:
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y2.nrrd')
                 slicer.util.loadVolume(VolumePath)
                 try:
                     VolumeNode = slicer.util.getNode('F_Y2')
                 except slicer.util.MRMLNodeNotFoundException:
                     VolumeNode = None
-            if 3 < ageLabel <= 8:
-                VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y4.nii')
+            elif 3 < ageLabel <= 8:
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y4.nrrd')
                 slicer.util.loadVolume(VolumePath)
                 try:
                     VolumeNode = slicer.util.getNode('F_Y4')
                 except slicer.util.MRMLNodeNotFoundException:
                     VolumeNode = None
-            if 8 < ageLabel <= 13:
-                VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y9.nii')
+            elif 8 < ageLabel <= 13:
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y9.nrrd')
                 slicer.util.loadVolume(VolumePath)
                 try:
                     VolumeNode = slicer.util.getNode('F_Y9')
                 except slicer.util.MRMLNodeNotFoundException:
                     VolumeNode = None
-            if 13 < ageLabel <= 20:
-                # VolumePath = os.path.join(ModuleDir, 'Bones Templates', 'scanner15ansF.nii')
-                VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y16.nii')
+            else:
+                VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y16.nrrd')
                 slicer.util.loadVolume(VolumePath)
                 try:
                     VolumeNode = slicer.util.getNode('F_Y16')
@@ -889,6 +900,10 @@ class BonesSegmentationWidget:
             qt.QMessageBox.warning(slicer.util.mainWindow(),
                                    "Reload and Test",
                                    'Exception!\n\n' + str(e) + "\n\nSee Python Console for Stack Trace")
+
+    def on_edit_source(self):
+        fpath = slicer.util.modulePath(self.module_name)
+        qt.QDesktopServices.openUrl(qt.QUrl("file:///" + fpath, qt.QUrl.TolerantMode))
 
 
 #

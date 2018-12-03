@@ -38,7 +38,7 @@ class myLandmarksWidget(MyRegistrationLib.myypqWidget):
         # reset the widget
         if self.landmarkGroupBox:
             self.landmarkGroupBox.setParent(None)
-        self.landmarkGroupBox = qt.QGroupBox("Landmarks")
+        self.landmarkGroupBox = qt.QGroupBox("Select Landmarks")
         self.landmarkGroupBox.setLayout(qt.QFormLayout())
         # add the action buttons at the top
         actionButtons = qt.QHBoxLayout()
