@@ -15,16 +15,12 @@ from __main__ import vtk, qt, ctk, slicer
 import MyRegistrationLib
 
 
-#
-# BonesSegmentation
-#
-
 class BonesSegmentation:
     def __init__(self, parent):
         parent.title = "Bones"
         parent.categories = ['IMAG2', "Pelvic Segmentation"]
         parent.dependencies = []
-        parent.contributors = ["Alessio Virzi' (IMAG2)"]
+        parent.contributors = ["Alessandro Delmonte, Alessio Virzi' (IMAG2)"]
         parent.helpText = string.Template("""
     This module performs the semiautomatic segmentation of the pelvic bones on T2w MRI.
     """).substitute({'a': parent.slicerWikiUrl, 'b': slicer.app.majorVersion, 'c': slicer.app.minorVersion})
@@ -41,9 +37,6 @@ class BonesSegmentation:
         if os.path.isfile(iconPath):
             parent.icon = qt.QIcon(iconPath)
 
-        # Add this test to the SelfTest module's list for discovery when the module
-        # is created.  Since this module may be discovered before SelfTests itself,
-        # create the list if it doesn't already exist.
         try:
             slicer.selfTests
         except AttributeError:
@@ -54,10 +47,6 @@ class BonesSegmentation:
         tester = BonesSegmentationTest()
         tester.runTest()
 
-
-#
-# qLandmarkRegistrationWidget
-#
 
 class BonesSegmentationWidget:
     """The module GUI widget"""
@@ -203,7 +192,6 @@ class BonesSegmentationWidget:
 
         # listen to the scene
         self.addObservers()
-
 
         # Add vertical spacer
         self.layout.addStretch(1)
@@ -385,6 +373,24 @@ class BonesSegmentationWidget:
         green_logic.FitSliceToAll()
         yellow_logic.FitSliceToAll()
 
+        mark_nodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsFiducialNode')
+        mark_nodes.UnRegister(slicer.mrmlScene)
+        mark_nodes.InitTraversal()
+        mark_node = mark_nodes.GetNextItemAsObject()
+        while mark_node:
+            if mov.GetName() in mark_node.GetName() or fix.GetName() in mark_node.GetName() or mark_node == 'F':
+                slicer.mrmlScene.RemoveNode(mark_node)
+            mark_node = mark_nodes.GetNextItemAsObject()
+
+        vol_nodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLVolumeNode')
+        vol_nodes.UnRegister(slicer.mrmlScene)
+        vol_nodes.InitTraversal()
+        vol_node = vol_nodes.GetNextItemAsObject()
+        while vol_node:
+            if mov.GetName() in vol_node.GetName():
+                slicer.mrmlScene.RemoveNode(vol_node)
+            vol_node = vol_nodes.GetNextItemAsObject()
+
     def enter(self):
         self.interfaceFrame.enabled = False
         self.setupDialog()
@@ -502,7 +508,7 @@ class BonesSegmentationWidget:
                 VolumePath = os.path.join(ModuleDir, 'Templates', 'F_M7.nrrd')
                 slicer.util.loadVolume(VolumePath)
                 try:
-                    VolumeNode = slicer.util.getNode('F_Y2')
+                    VolumeNode = slicer.util.getNode('F_M7')
                 except slicer.util.MRMLNodeNotFoundException:
                     VolumeNode = None
             elif 1 < ageLabel <= 3:
