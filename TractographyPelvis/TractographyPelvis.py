@@ -20,13 +20,11 @@ import numpy.linalg as npl
 import qt
 import slicer
 import vtk
-import nibabel as nib
-from nibabel.affines import apply_affine
-from nibabel.streamlines.tck import TckFile as tck
+
 from scipy.ndimage import generate_binary_structure
 from scipy.ndimage.morphology import binary_dilation, binary_fill_holes, binary_opening, binary_erosion
 from scipy.spatial import ConvexHull, Delaunay
-from vtk.util import numpy_support as ns
+from functions import filter as ft
 
 __author__ = 'Alessandro Delmonte'
 __email__ = 'delmonte.ale92@gmail.com'
@@ -38,11 +36,6 @@ def vtkmatrix_to_numpy(matrix):
         for j in range(4):
             m[i, j] = matrix.GetElement(i, j)
     return m
-
-
-def save_nii(fname, data, affine):
-    img = nib.Nifti1Image(data.astype(np.int16), affine)
-    nib.save(img, fname)
 
 
 def pipe(cmd, verbose=False, my_env=slicer.util.startupEnvironment()):
@@ -379,12 +372,12 @@ class TractographyPelvisWidget:
         line2.setStyleSheet("min-height: 24px")
         tractoFormLayout.addRow(line2)
 
-        groupbox = qt.QGroupBox()
-        groupbox.setTitle('Whole Pelvis Tractogram')
-        grid_layout = qt.QGridLayout(groupbox)
-        grid_layout.setColumnStretch(1, 1)
-        grid_layout.setColumnStretch(2, 1)
-        grid_layout.setColumnStretch(3, 1)
+        groupbox2 = qt.QGroupBox()
+        groupbox2.setTitle('Whole Pelvis Tractogram')
+        grid_layout2 = qt.QGridLayout(groupbox2)
+        grid_layout2.setColumnStretch(1, 1)
+        grid_layout2.setColumnStretch(2, 1)
+        grid_layout2.setColumnStretch(3, 1)
 
         textwidget_info = qt.QLabel()
         textwidget_info.setText(
@@ -400,18 +393,80 @@ class TractographyPelvisWidget:
 
         textwidget = qt.QLabel()
         textwidget.setText('Use Whole: ')
-        grid_layout.addWidget(textwidget, 0, 0, 0)
+        grid_layout2.addWidget(textwidget, 0, 0, 0)
         self.radio_whole = qt.QCheckBox()
         self.radio_whole.setChecked(False)
-        grid_layout.addWidget(self.radio_whole, 0, 1, 0)
+        grid_layout2.addWidget(self.radio_whole, 0, 1, 0)
 
         textwidget2 = qt.QLabel()
         textwidget2.setText('File Path (.tck): ')
-        grid_layout.addWidget(textwidget2, 1, 0, 0)
-        grid_layout.addWidget(self.output_file_selector, 1, 1, 1, 3)
+        grid_layout2.addWidget(textwidget2, 1, 0, 0)
+        grid_layout2.addWidget(self.output_file_selector, 1, 1, 1, 3)
 
-        groupbox.setLayout(grid_layout)
-        tractoFormLayout.addRow(groupbox)
+        groupbox2.setLayout(grid_layout2)
+        tractoFormLayout.addRow(groupbox2)
+
+        filtersCollapsibleButton = ctk.ctkCollapsibleButton()
+        filtersCollapsibleButton.text = 'Filters'
+
+        self.layout.addWidget(filtersCollapsibleButton)
+
+        filtersFormLayout = qt.QFormLayout(filtersCollapsibleButton)
+
+        self.tractofiltersSelector = slicer.qMRMLNodeComboBox()
+        self.tractofiltersSelector.nodeTypes = ['vtkMRMLFiberBundleNode']
+        self.tractofiltersSelector.selectNodeUponCreation = True
+        self.tractofiltersSelector.addEnabled = False
+        self.tractofiltersSelector.removeEnabled = False
+        self.tractofiltersSelector.noneEnabled = False
+        self.tractofiltersSelector.showHidden = False
+        self.tractofiltersSelector.renameEnabled = False
+        self.tractofiltersSelector.showChildNodeTypes = False
+        self.tractofiltersSelector.setMRMLScene(slicer.mrmlScene)
+
+        self.tractofiltersNode = self.tractofiltersSelector.currentNode()
+
+        self.tractofiltersSelector.connect('nodeActivated(vtkMRMLNode*)', self.ontractofiltersSelect)
+        filtersFormLayout.addRow('Input Fiber Bundle: ', self.tractofiltersSelector)
+
+        self.outfiltersSelector = slicer.qMRMLNodeComboBox()
+        self.outfiltersSelector.nodeTypes = ['vtkMRMLFiberBundleNode']
+        self.outfiltersSelector.selectNodeUponCreation = True
+        self.outfiltersSelector.addEnabled = True
+        self.outfiltersSelector.removeEnabled = False
+        self.outfiltersSelector.noneEnabled = False
+        self.outfiltersSelector.showHidden = False
+        self.outfiltersSelector.renameEnabled = True
+        self.outfiltersSelector.showChildNodeTypes = False
+        self.outfiltersSelector.setMRMLScene(slicer.mrmlScene)
+
+        self.outfiltersNode = self.outfiltersSelector.currentNode()
+
+        self.outfiltersSelector.connect('nodeActivated(vtkMRMLNode*)', self.onoutfiltersSelect)
+        filtersFormLayout.addRow('Filtered Fiber Bundle: ', self.outfiltersSelector)
+
+        groupbox3 = qt.QGroupBox()
+        groupbox3.setStyleSheet("border:none")
+        grid_layout3 = qt.QGridLayout(groupbox3)
+        grid_layout3.setAlignment(4)
+        grid_layout3.setColumnMinimumWidth(0, 150)
+        grid_layout3.setColumnMinimumWidth(1, 150)
+
+        self.radio_ap = qt.QRadioButton('Anterior-Posterior')
+        self.radio_ap.setChecked(True)
+        self.radio_si = qt.QRadioButton('Superior-Inferior')
+        self.radio_ml = qt.QRadioButton('Medial-Lateral')
+        grid_layout3.addWidget(self.radio_ap, 0, 0, 0)
+        grid_layout3.addWidget(self.radio_si, 0, 1, 0)
+        grid_layout3.addWidget(self.radio_ml, 0, 2, 0)
+        filtersFormLayout.addRow('Principal Direction: ', groupbox3)
+
+        self.compute_filter = qt.QPushButton('Filter')
+        self.compute_filter.toolTip = 'Apply the PQL algorithm to the input tractogram.'
+        self.compute_filter.enabled = True
+
+        self.compute_filter.connect('clicked(bool)', self.on_compute_filter)
+        filtersFormLayout.addRow(self.compute_filter)
 
         self.layout.addStretch(1)
 
@@ -466,6 +521,12 @@ class TractographyPelvisWidget:
 
     def onexclusionSelect(self):
         self.exclusionNode = self.exclusionSelector.currentNode()
+
+    def ontractofiltersSelect(self):
+        self.tractofiltersNode = self.tractofiltersSelector.currentNode()
+
+    def onoutfiltersSelect(self):
+        self.outfiltersNode = self.outfiltersSelector.currentNode()
 
     # def onsacrumSelect(self):
     #     if self.sacrumSelector.currentNode():
@@ -580,6 +641,43 @@ class TractographyPelvisWidget:
                 self.output_file_selector.addCurrentPathToHistory()
                 new_path = self.output_file_selector.currentPath.encode('utf-8')
                 shutil.move(path, new_path)
+
+            self.cleanup()
+
+    def on_compute_filter(self):
+        if self.tractofiltersNode and self.outfiltersNode:
+            properties = {}
+            properties['useCompression'] = 0
+            tracto_path = os.path.join(self.logic.tmp, 'tracto.vtk')
+            slicer.util.saveNode(self.tractofiltersNode, tracto_path, properties)
+
+            outputname = self.outfiltersNode.GetName()
+
+            if self.radio_ml.isChecked():
+                dir = 0
+            elif self.radio_ap.isChecked():
+                dir = 1
+            else:
+                dir = 2
+
+            path = self.logic.filter(tracto_path, dir)
+
+            slicer.mrmlScene.RemoveNode(self.outfiltersNode)
+
+            success, self.upNode = slicer.util.loadFiberBundle(path, True)
+            self.upNode.SetName(outputname)
+            self.outfiltersSelector.setCurrentNode(self.upNode)
+
+            fiber_nodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLFiberBundleNode')
+            fiber_nodes.UnRegister(slicer.mrmlScene)
+            fiber_nodes.InitTraversal()
+            fiber_node = fiber_nodes.GetNextItemAsObject()
+            while fiber_node:
+                if fiber_node is not self.upNode:
+                    fiber_node.GetLineDisplayNode().SetVisibility(0)
+                    fiber_node.GetTubeDisplayNode().SetVisibility(0)
+                    fiber_node.GetGlyphDisplayNode().SetVisibility(0)
+                fiber_node = fiber_nodes.GetNextItemAsObject()
 
             self.cleanup()
 
@@ -766,58 +864,10 @@ class TractographyPelvisLogic:
 
         return final_path
 
-
-def tck2vtk(path_tck):
-    streamlines, _ = read_tck(path_tck)
-    file_name, _ = os.path.splitext(path_tck)
-    path_vtk = file_name + '.vtk'
-    save_vtk(path_vtk, streamlines)
-    return path_vtk
-
-
-def read_tck(filename):
-    tck_object = tck.load(filename)
-    streamlines = tck_object.streamlines
-    header = tck_object.header
-
-    return streamlines, header
-
-
-def save_vtk(filename, tracts, lines_indices=None):
-    lengths = [len(p) for p in tracts]
-    line_starts = ns.numpy.r_[0, ns.numpy.cumsum(lengths)]
-    if lines_indices is None:
-        lines_indices = [ns.numpy.arange(length) + line_start for length, line_start in zip(lengths, line_starts)]
-
-    ids = ns.numpy.hstack([ns.numpy.r_[c[0], c[1]] for c in zip(lengths, lines_indices)])
-    vtk_ids = ns.numpy_to_vtkIdTypeArray(ids.astype('int64'), deep=True)
-
-    cell_array = vtk.vtkCellArray()
-    cell_array.SetCells(len(tracts), vtk_ids)
-    points = ns.numpy.vstack(tracts).astype(ns.get_vtk_to_numpy_typemap()[vtk.VTK_DOUBLE])
-    points_array = ns.numpy_to_vtk(points, deep=True)
-
-    poly_data = vtk.vtkPolyData()
-    vtk_points = vtk.vtkPoints()
-    vtk_points.SetData(points_array)
-    poly_data.SetPoints(vtk_points)
-    poly_data.SetLines(cell_array)
-
-    poly_data.BuildCells()
-
-    if filename.endswith('.xml') or filename.endswith('.vtp'):
-        writer = vtk.vtkXMLPolyDataWriter()
-        writer.SetDataModeToBinary()
-    else:
-        writer = vtk.vtkPolyDataWriter()
-        writer.SetFileTypeToBinary()
-
-    writer.SetFileName(filename)
-    if hasattr(vtk, 'VTK_MAJOR_VERSION') and vtk.VTK_MAJOR_VERSION > 5:
-        writer.SetInputData(poly_data)
-    else:
-        writer.SetInput(poly_data)
-    writer.Write()
+    def filter(self, in_path, dir):
+        out_path = os.path.join(self.tmp, 'filter.vtk')
+        ft(in_path, out_path, dir)
+        return out_path
 
 
 class TractographyPelvisTest(unittest.TestCase):
