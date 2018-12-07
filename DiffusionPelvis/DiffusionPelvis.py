@@ -425,6 +425,92 @@ class DiffusionPelvisWidget:
         self.measureButton.connect('clicked(bool)', self.onmeasureButton)
         measuresFormLayout.addRow(self.measureButton)
 
+        resampleCollapsibleButton = ctk.ctkCollapsibleButton()
+        resampleCollapsibleButton.text = 'Resampling'
+
+        self.layout.addWidget(resampleCollapsibleButton)
+
+        resampleFormLayout = qt.QFormLayout(resampleCollapsibleButton)
+
+        self.riDWISelector = slicer.qMRMLNodeComboBox()
+        self.riDWISelector.nodeTypes = ['vtkMRMLDiffusionWeightedVolumeNode']
+        self.riDWISelector.selectNodeUponCreation = True
+        self.riDWISelector.addEnabled = False
+        self.riDWISelector.removeEnabled = False
+        self.riDWISelector.noneEnabled = False
+        self.riDWISelector.showHidden = False
+        self.riDWISelector.renameEnabled = False
+        self.riDWISelector.showChildNodeTypes = False
+        self.riDWISelector.setMRMLScene(slicer.mrmlScene)
+
+        self.ridwiNode = self.riDWISelector.currentNode()
+
+        self.riDWISelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onridwiSelect)
+        resampleFormLayout.addRow('Input DWI: ', self.riDWISelector)
+
+        self.roDWISelector = slicer.qMRMLNodeComboBox()
+        self.roDWISelector.nodeTypes = ['vtkMRMLDiffusionWeightedVolumeNode']
+        self.roDWISelector.selectNodeUponCreation = True
+        self.roDWISelector.addEnabled = True
+        self.roDWISelector.removeEnabled = False
+        self.roDWISelector.noneEnabled = False
+        self.roDWISelector.showHidden = False
+        self.roDWISelector.renameEnabled = True
+        self.roDWISelector.showChildNodeTypes = False
+        self.roDWISelector.setMRMLScene(slicer.mrmlScene)
+
+        self.rodwiNode = self.roDWISelector.currentNode()
+
+        self.roDWISelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onrodwiSelect)
+        resampleFormLayout.addRow('Output DWI: ', self.roDWISelector)
+
+        self.res1 = qt.QDoubleSpinBox()
+        self.res1.setRange(0, 5)
+        self.res1.setSingleStep(0.25)
+        self.res1.setValue(1.25)
+
+        x1 = qt.QLabel()
+        x1.setText('x')
+
+        self.res2 = qt.QDoubleSpinBox()
+        self.res2.setRange(0, 5)
+        self.res2.setSingleStep(0.25)
+        self.res2.setValue(1.25)
+
+        x2 = qt.QLabel()
+        x2.setText('x')
+
+        self.res3 = qt.QDoubleSpinBox()
+        self.res3.setRange(0, 5)
+        self.res3.setSingleStep(0.25)
+        self.res3.setValue(1.25)
+
+        mm = qt.QLabel()
+        mm.setText('mm')
+
+        grid_resample = qt.QGridLayout(groupbox)
+        grid_resample.setColumnStretch(1, 0)
+        grid_resample.setColumnStretch(2, 0)
+        grid_resample.setColumnStretch(3, 0)
+        grid_resample.setColumnStretch(4, 0)
+        grid_resample.setColumnStretch(5, 0)
+        grid_resample.setColumnStretch(6, 1)
+
+        grid_resample.addWidget(self.res1, 0, 1, 0)
+        grid_resample.addWidget(x1, 0, 2, 0)
+        grid_resample.addWidget(self.res2, 0, 3, 0)
+        grid_resample.addWidget(x2, 0, 4, 0)
+        grid_resample.addWidget(self.res3, 0, 5, 0)
+        grid_resample.addWidget(mm, 0, 6, 0)
+
+        resampleFormLayout.addRow('New Resolution: ', grid_resample)
+
+        self.resampleButton = qt.QPushButton('Resample')
+        self.resampleButton.enabled = True
+
+        self.resampleButton.connect('clicked(bool)', self.onresampleButton)
+        resampleFormLayout.addRow(self.resampleButton)
+
         self.layout.addStretch(1)
 
         if self.developerMode:
@@ -652,6 +738,42 @@ class DiffusionPelvisWidget:
             nodename = self.mapNode.GetName()
             slicer.mrmlScene.RemoveNode(self.mapNode)
             upNode.SetName(nodename)
+
+            self.cleanup()
+
+    def onridwiSelect(self):
+        self.ridwiNode = self.riDWISelector.currentNode()
+
+    def onrodwiSelect(self):
+        self.rodwiNode = self.roDWISelector.currentNode()
+
+    def onresampleButton(self):
+        if self.ridwiNode and self.rodwiNode:
+            data_path = os.path.join(self.logic.tmp, 'resample_data.nii')
+            bval_path = os.path.join(self.logic.tmp, 'resample.bval')
+            bvec_path = os.path.join(self.logic.tmp, 'resample.bvec')
+
+            parameters = {}
+            parameters['conversionMode'] = 'NrrdToFSL'
+            parameters['inputVolume'] = self.ridwiNode.GetID()
+            parameters['outputNiftiFile'] = data_path
+            parameters['outputBValues'] = bval_path
+            parameters['outputBVectors'] = bvec_path
+            converter = slicer.modules.dwiconvert
+            slicer.cli.runSync(converter, None, parameters)
+
+            resample_path = self.logic.resample(data_path, self.res1.value, self.res3.value, self.res3.value)
+
+            parameters = {}
+            parameters['conversionMode'] = 'FSLToNrrd'
+            parameters['outputVolume'] = self.rodwiNode.GetID()
+            parameters['fslNIFTIFile'] = resample_path
+            parameters['inputBValues'] = bval_path
+            parameters['inputBVectors'] = bvec_path
+            parameters['allowLossyConversion'] = True
+            parameters['transpose'] = True
+            converter = slicer.modules.dwiconvert
+            slicer.cli.runSync(converter, None, parameters)
 
             self.cleanup()
 
@@ -994,6 +1116,14 @@ class DiffusionPelvisLogic:
                  self.my_env)
 
         return metric_path
+
+    def resample(self, data_path, x, y, z):
+        resample_path = os.path.join(self.tmp, 'resampled.nii')
+        cmd = 'mrresize -force ' + data_path + ' ' + resample_path + ' -voxel ' + '{}'.format(x) + ',' + '{}'.format(
+            y) + ',' + '{}'.format(z)
+        pipe(cmd, True, self.my_env)
+
+        return resample_path
 
 
 class DiffusionPelvisTest(unittest.TestCase):
