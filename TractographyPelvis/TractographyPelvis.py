@@ -24,7 +24,9 @@ import vtk
 from scipy.ndimage import generate_binary_structure
 from scipy.ndimage.morphology import binary_dilation, binary_fill_holes, binary_opening, binary_erosion
 from scipy.spatial import ConvexHull, Delaunay
+from functions import *
 from functions import filter as ft
+
 
 __author__ = 'Alessandro Delmonte'
 __email__ = 'delmonte.ale92@gmail.com'
