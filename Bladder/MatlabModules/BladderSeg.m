@@ -8,7 +8,15 @@ function outputParams=BladderSeg(inputParams)
 %  inputParams.outputvolume: output image filename, result of the processing
 %
 
-addpath(genpath(pwd));
+addpath(horzcat(pwd,'/InnerBlad')); %add folder with other segmentation files
+addpath(horzcat(pwd,'/InnerBlad/Filter3D'));
+addpath(horzcat(pwd,'/InnerBlad/Filter3D/canny'));
+addpath(horzcat(pwd,'/InnerBlad/Snake3D'));
+addpath(horzcat(pwd,'/InnerBlad/Snake3D/mesh'));
+addpath(horzcat(pwd,'/InnerBlad/Snake3D/mesh/meshalization'));
+addpath(horzcat(pwd,'/InnerBlad/Snake3D/mesh/Mesh_voxelisation'));
+addpath(horzcat(pwd,'/InnerBlad/Snake3D/mesh/Remesher'));
+addpath(horzcat(pwd,'/InnerBlad/SlicerBridge'));
 
 % read input image
 img=cli_imageread(inputParams.inputvolume); 
