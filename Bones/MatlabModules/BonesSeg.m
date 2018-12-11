@@ -31,7 +31,7 @@ im_p(im_p<=0.5)=0;
 
 
 %% Segmentation
-seg = def_model3D(im,im_p,1) 
+seg = def_model3D(im,im_p,1);
 img.pixelData(:) = 0;
 img.pixelData(seg == 1) = 2;
 cli_imagewrite(inputParams.outputvolume, img);
