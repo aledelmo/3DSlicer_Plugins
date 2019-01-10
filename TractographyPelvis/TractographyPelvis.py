@@ -872,6 +872,59 @@ class TractographyPelvisLogic:
         return out_path
 
 
+def tck2vtk(path_tck):
+    streamlines, _ = read_tck(path_tck)
+    file_name, _ = os.path.splitext(path_tck)
+    path_vtk = file_name + '.vtk'
+    save_vtk(path_vtk, streamlines)
+    return path_vtk
+
+
+def read_tck(filename):
+    tck_object = tck.load(filename)
+    streamlines = tck_object.streamlines
+    header = tck_object.header
+
+    return streamlines, header
+
+
+def save_vtk(filename, tracts, lines_indices=None):
+    lengths = [len(p) for p in tracts]
+    line_starts = ns.numpy.r_[0, ns.numpy.cumsum(lengths)]
+    if lines_indices is None:
+        lines_indices = [ns.numpy.arange(length) + line_start for length, line_start in zip(lengths, line_starts)]
+
+    ids = ns.numpy.hstack([ns.numpy.r_[c[0], c[1]] for c in zip(lengths, lines_indices)])
+    vtk_ids = ns.numpy_to_vtkIdTypeArray(ids.astype('int64'), deep=True)
+
+    cell_array = vtk.vtkCellArray()
+    cell_array.SetCells(len(tracts), vtk_ids)
+    points = ns.numpy.vstack(tracts).astype(ns.get_vtk_to_numpy_typemap()[vtk.VTK_DOUBLE])
+    points_array = ns.numpy_to_vtk(points, deep=True)
+
+    poly_data = vtk.vtkPolyData()
+    vtk_points = vtk.vtkPoints()
+    vtk_points.SetData(points_array)
+    poly_data.SetPoints(vtk_points)
+    poly_data.SetLines(cell_array)
+
+    poly_data.BuildCells()
+
+    if filename.endswith('.xml') or filename.endswith('.vtp'):
+        writer = vtk.vtkXMLPolyDataWriter()
+        writer.SetDataModeToBinary()
+    else:
+        writer = vtk.vtkPolyDataWriter()
+        writer.SetFileTypeToBinary()
+
+    writer.SetFileName(filename)
+    if hasattr(vtk, 'VTK_MAJOR_VERSION') and vtk.VTK_MAJOR_VERSION > 5:
+        writer.SetInputData(poly_data)
+    else:
+        writer.SetInput(poly_data)
+    writer.Write()
+
+
 class TractographyPelvisTest(unittest.TestCase):
 
     def __init__(self):
