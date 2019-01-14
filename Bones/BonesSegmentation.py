@@ -536,7 +536,7 @@ class BonesSegmentationWidget:
                 VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y15.nrrd')
                 slicer.util.loadVolume(VolumePath)
                 try:
-                    VolumeNode = slicer.util.getNode('F_Y16')
+                    VolumeNode = slicer.util.getNode('F_Y15')
                 except slicer.util.MRMLNodeNotFoundException:
                     VolumeNode = None
                 #
