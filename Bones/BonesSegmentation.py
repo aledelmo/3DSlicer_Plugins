@@ -471,74 +471,124 @@ class BonesSegmentationWidget:
             if 0 <= ageLabel <= 1:
                 VolumePath = os.path.join(ModuleDir, 'Templates', 'M_M7.nrrd')
                 slicer.util.loadVolume(VolumePath)
-                try:
-                    VolumeNode = slicer.util.getNode('M_M7')
-                except slicer.util.MRMLNodeNotFoundException:
-                    VolumeNode = None
+                volume_nodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLVolumeNode')
+                volume_nodes.UnRegister(slicer.mrmlScene)
+                volume_nodes.InitTraversal()
+                volume_node = volume_nodes.GetNextItemAsObject()
+                while volume_node:
+                    if 'M_M7' in volume_node.GetName():
+                        VolumeNode = volume_node
+                        break
+                    volume_node = volume_nodes.GetNextItemAsObject()
             elif 1 < ageLabel <= 3:
                 VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y2.nrrd')
                 slicer.util.loadVolume(VolumePath)
-                try:
-                    VolumeNode = slicer.util.getNode('M_Y2')
-                except slicer.util.MRMLNodeNotFoundException:
-                    VolumeNode = None
+                volume_nodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLVolumeNode')
+                volume_nodes.UnRegister(slicer.mrmlScene)
+                volume_nodes.InitTraversal()
+                volume_node = volume_nodes.GetNextItemAsObject()
+                while volume_node:
+                    if 'M_Y2' in volume_node.GetName():
+                        VolumeNode = volume_node
+                        break
+                    volume_node = volume_nodes.GetNextItemAsObject()
             elif 3 < ageLabel <= 8:
                 VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y4.nrrd')
                 slicer.util.loadVolume(VolumePath)
-                try:
-                    VolumeNode = slicer.util.getNode('M_Y4')
-                except slicer.util.MRMLNodeNotFoundException:
-                    VolumeNode = None
+                volume_nodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLVolumeNode')
+                volume_nodes.UnRegister(slicer.mrmlScene)
+                volume_nodes.InitTraversal()
+                volume_node = volume_nodes.GetNextItemAsObject()
+                while volume_node:
+                    if 'M_Y4' in volume_node.GetName():
+                        VolumeNode = volume_node
+                        break
+                    volume_node = volume_nodes.GetNextItemAsObject()
             elif 8 < ageLabel <= 15:
                 VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y9.nrrd')
                 slicer.util.loadVolume(VolumePath)
-                try:
-                    VolumeNode = slicer.util.getNode('M_Y9')
-                except slicer.util.MRMLNodeNotFoundException:
-                    VolumeNode = None
+                volume_nodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLVolumeNode')
+                volume_nodes.UnRegister(slicer.mrmlScene)
+                volume_nodes.InitTraversal()
+                volume_node = volume_nodes.GetNextItemAsObject()
+                while volume_node:
+                    if 'M_Y9' in volume_node.GetName():
+                        VolumeNode = volume_node
+                        break
+                    volume_node = volume_nodes.GetNextItemAsObject()
             else:
                 VolumePath = os.path.join(ModuleDir, 'Templates', 'M_Y15.nrrd')
                 slicer.util.loadVolume(VolumePath)
-                try:
-                    VolumeNode = slicer.util.getNode('M_Y15')
-                except slicer.util.MRMLNodeNotFoundException:
-                    VolumeNode = None
+                volume_nodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLVolumeNode')
+                volume_nodes.UnRegister(slicer.mrmlScene)
+                volume_nodes.InitTraversal()
+                volume_node = volume_nodes.GetNextItemAsObject()
+                while volume_node:
+                    if 'M_Y15' in volume_node.GetName():
+                        VolumeNode = volume_node
+                        break
+                    volume_node = volume_nodes.GetNextItemAsObject()
         else:  # Female patient
             if 0 <= ageLabel <= 1:
                 VolumePath = os.path.join(ModuleDir, 'Templates', 'F_M7.nrrd')
                 slicer.util.loadVolume(VolumePath)
-                try:
-                    VolumeNode = slicer.util.getNode('F_M7')
-                except slicer.util.MRMLNodeNotFoundException:
-                    VolumeNode = None
+                volume_nodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLVolumeNode')
+                volume_nodes.UnRegister(slicer.mrmlScene)
+                volume_nodes.InitTraversal()
+                volume_node = volume_nodes.GetNextItemAsObject()
+                while volume_node:
+                    if 'F_M7' in volume_node.GetName():
+                        VolumeNode = volume_node
+                        break
+                    volume_node = volume_nodes.GetNextItemAsObject()
             elif 1 < ageLabel <= 3:
                 VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y2.nrrd')
                 slicer.util.loadVolume(VolumePath)
-                try:
-                    VolumeNode = slicer.util.getNode('F_Y2')
-                except slicer.util.MRMLNodeNotFoundException:
-                    VolumeNode = None
+                volume_nodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLVolumeNode')
+                volume_nodes.UnRegister(slicer.mrmlScene)
+                volume_nodes.InitTraversal()
+                volume_node = volume_nodes.GetNextItemAsObject()
+                while volume_node:
+                    if 'F_Y2' in volume_node.GetName():
+                        VolumeNode = volume_node
+                        break
+                    volume_node = volume_nodes.GetNextItemAsObject()
             elif 3 < ageLabel <= 8:
                 VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y4.nrrd')
                 slicer.util.loadVolume(VolumePath)
-                try:
-                    VolumeNode = slicer.util.getNode('F_Y4')
-                except slicer.util.MRMLNodeNotFoundException:
-                    VolumeNode = None
+                volume_nodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLVolumeNode')
+                volume_nodes.UnRegister(slicer.mrmlScene)
+                volume_nodes.InitTraversal()
+                volume_node = volume_nodes.GetNextItemAsObject()
+                while volume_node:
+                    if 'F_Y4' in volume_node.GetName():
+                        VolumeNode = volume_node
+                        break
+                    volume_node = volume_nodes.GetNextItemAsObject()
             elif 8 < ageLabel <= 13:
                 VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y9.nrrd')
                 slicer.util.loadVolume(VolumePath)
-                try:
-                    VolumeNode = slicer.util.getNode('F_Y9')
-                except slicer.util.MRMLNodeNotFoundException:
-                    VolumeNode = None
+                volume_nodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLVolumeNode')
+                volume_nodes.UnRegister(slicer.mrmlScene)
+                volume_nodes.InitTraversal()
+                volume_node = volume_nodes.GetNextItemAsObject()
+                while volume_node:
+                    if 'F_Y9' in volume_node.GetName():
+                        VolumeNode = volume_node
+                        break
+                    volume_node = volume_nodes.GetNextItemAsObject()
             else:
                 VolumePath = os.path.join(ModuleDir, 'Templates', 'F_Y15.nrrd')
                 slicer.util.loadVolume(VolumePath)
-                try:
-                    VolumeNode = slicer.util.getNode('F_Y15')
-                except slicer.util.MRMLNodeNotFoundException:
-                    VolumeNode = None
+                volume_nodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLVolumeNode')
+                volume_nodes.UnRegister(slicer.mrmlScene)
+                volume_nodes.InitTraversal()
+                volume_node = volume_nodes.GetNextItemAsObject()
+                while volume_node:
+                    if 'F_Y15' in volume_node.GetName():
+                        VolumeNode = volume_node
+                        break
+                    volume_node = volume_nodes.GetNextItemAsObject()
                 #
         #
         #
