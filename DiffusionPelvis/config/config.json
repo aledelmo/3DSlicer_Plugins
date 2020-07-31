@@ -1,4 +1,4 @@
 {
-  "MRTrix_path": "/usr/local/bin",
-  "ANTS_path": "/usr/local/antsbin/bin/"
+  "MRTrix_path": "/home/imag2/mrtrix3/bin/",
+  "ANTS_path": "/home/imag2/ANTs/install/bin/"
 }

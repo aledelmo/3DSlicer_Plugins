@@ -1,9 +1,8 @@
-from mypqWidget import *
+from .mypqWidget import *
 # from Visualization import *
-from myLandmarks import *
+from .myLandmarks import *
 # from Visualization import *
-from myLandmarks import *
-from mypqWidget import *
+
 # from RegistrationState import *
 # from RegistrationPlugin import *
 
