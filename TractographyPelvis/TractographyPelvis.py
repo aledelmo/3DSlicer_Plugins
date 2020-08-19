@@ -814,7 +814,7 @@ class TractographyPelvisLogic:
                     Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + ' -minlength ' + str(Minlength) + \
                          ' -maxlength ' + str(
                     Maxlength) + ' -seed_image ' + Seeds + ' -angle ' + str(
-                    Angle) + ' -select 1M'
+                    Angle) + ' -select 1M -step 1'
             if Mask:
                 string = string + ' -mask ' + Mask
             if ROE:
@@ -850,7 +850,7 @@ class TractographyPelvisLogic:
                                                                                                    'tracto.tck') + \
                          ' -algorithm ' + algorithm + ' -cutoff ' + str(Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + \
                          ' -minlength ' + str(Minlength) + ' -maxlength ' + str(Maxlength) + ' -seed_image ' \
-                         + Seeds + '  -fslgrad ' + fbvec + ' ' + fbval + ' -select 1M'
+                         + Seeds + '  -fslgrad ' + fbvec + ' ' + fbval + ' -select 1M -step 1'
 
             if Mask:
                 string = string + ' -mask ' + Mask

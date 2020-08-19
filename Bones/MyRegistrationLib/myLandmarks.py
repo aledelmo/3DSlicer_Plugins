@@ -179,11 +179,11 @@ class myLandmarksWidget(MyRegistrationLib.myypqWidget):
     def wrappedNodeAddedUpdate(self):
         try:
             self.nodeAddedUpdate()
-        except Exception, e:
+        except Exception:
             import traceback
             traceback.print_exc()
             qt.QMessageBox.warning(slicer.util.mainWindow(),
-                                   "Node Added", 'Exception!\n\n' + str(e) + "\n\nSee Python Console for Stack Trace")
+                                   "Node Added", 'Exception!\n\n' + "\n\nSee Python Console for Stack Trace")
 
     def nodeAddedUpdate(self):
         """Perform the update of any new fiducials.

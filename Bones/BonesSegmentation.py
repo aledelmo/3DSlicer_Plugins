@@ -817,8 +817,8 @@ class BonesSegmentationWidget:
             if timing: onLandmarkPickedStart = time.time()
             self.onLandmarkPicked(self.landmarksWidget.selectedLandmark)
             if timing: onLandmarkPickedEnd = time.time()
-            if timing: print 'Time to update visualization ' + str(
-                onLandmarkPickedEnd - onLandmarkPickedStart) + ' seconds'
+            if timing: print('Time to update visualization ' + str(
+                onLandmarkPickedEnd - onLandmarkPickedStart) + ' seconds')
 
         slicer.mrmlScene.EndState(slicer.mrmlScene.BatchProcessState)
 
@@ -950,12 +950,12 @@ class BonesSegmentationWidget:
             evalString = 'globals()["%s"].%sTest()' % (moduleName, moduleName)
             tester = eval(evalString)
             tester.runTest(scenario=scenario)
-        except Exception, e:
+        except Exception:
             import traceback
             traceback.print_exc()
             qt.QMessageBox.warning(slicer.util.mainWindow(),
                                    "Reload and Test",
-                                   'Exception!\n\n' + str(e) + "\n\nSee Python Console for Stack Trace")
+                                   'Exception!\n\n'  + "\n\nSee Python Console for Stack Trace")
 
     def on_edit_source(self):
         fpath = slicer.util.modulePath(self.module_name)
