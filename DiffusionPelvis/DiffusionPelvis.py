@@ -410,11 +410,15 @@ class DiffusionPelvisWidget:
         self.radio_b0.setChecked(True)
         self.radio_fa = qt.QRadioButton('Fractional Anisotropy')
         self.radio_md = qt.QRadioButton('Mean Diffusivity')
+        self.radio_ad = qt.QRadioButton('Axial Diffusivity')
+        self.radio_rd = qt.QRadioButton('Radial Diffusivity')
 
         grid_layout4 = qt.QGridLayout()
         grid_layout4.addWidget(self.radio_b0, 0, 0, 0)
         grid_layout4.addWidget(self.radio_fa, 0, 1, 0)
         grid_layout4.addWidget(self.radio_md, 0, 2, 0)
+        grid_layout4.addWidget(self.radio_ad, 1, 0, 0)
+        grid_layout4.addWidget(self.radio_rd, 1, 1, 0)
 
         measuresFormLayout.addRow('Measure', grid_layout4)
 
@@ -708,7 +712,8 @@ class DiffusionPelvisWidget:
 
     def onmeasureButton(self):
         if self.mdwiNode and self.mapNode:
-            switch = {'b0': self.radio_b0.isChecked(), 'fa': self.radio_fa.isChecked(), 'md': self.radio_md.isChecked()}
+            switch = {'b0': self.radio_b0.isChecked(), 'fa': self.radio_fa.isChecked(), 'md': self.radio_md.isChecked(),
+                      'ad': self.radio_ad.isChecked(), 'rd': self.radio_rd.isChecked()}
 
             data_path = os.path.join(self.logic.tmp, 'measure_data.nii')
             bval_path = os.path.join(self.logic.tmp, 'measure.bval')
@@ -1093,6 +1098,7 @@ class DiffusionPelvisLogic:
                 'dwiextract -force ' + data_path + ' - -bzero -fslgrad ' + bvecs + ' ' + bvals +
                 ' | mrmath - mean ' + metric_path + ' -axis 3',
                 True, self.my_env)
+
         if switch['fa'] is True:
             metric_path = os.path.join(self.tmp, 'fa.nii')
             cmd = 'dwi2tensor -force ' + data_path + ' ' + os.path.join(self.tmp,
@@ -1113,6 +1119,30 @@ class DiffusionPelvisLogic:
             pipe(cmd, True, self.my_env)
 
             pipe('tensor2metric -force ' + os.path.join(self.tmp, 'DTI.mif') + ' -adc ' + metric_path, True,
+                 self.my_env)
+
+        if switch['ad'] is True:
+            metric_path = os.path.join(self.tmp, 'ad.nii')
+            cmd = 'dwi2tensor -force ' + data_path + ' ' + os.path.join(self.tmp,
+                                                                        'DTI.mif') + ' -fslgrad ' + bvecs + ' ' + bvals
+            if mask:
+                cmd += ' -mask ' + mask
+
+            pipe(cmd, True, self.my_env)
+
+            pipe('tensor2metric -force ' + os.path.join(self.tmp, 'DTI.mif') + ' -ad ' + metric_path, True,
+                 self.my_env)
+
+        if switch['rd'] is True:
+            metric_path = os.path.join(self.tmp, 'rd.nii')
+            cmd = 'dwi2tensor -force ' + data_path + ' ' + os.path.join(self.tmp,
+                                                                        'DTI.mif') + ' -fslgrad ' + bvecs + ' ' + bvals
+            if mask:
+                cmd += ' -mask ' + mask
+
+            pipe(cmd, True, self.my_env)
+
+            pipe('tensor2metric -force ' + os.path.join(self.tmp, 'DTI.mif') + ' -rd ' + metric_path, True,
                  self.my_env)
 
         return metric_path
