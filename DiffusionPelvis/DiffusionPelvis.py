@@ -1,5 +1,5 @@
 import ctk
-import dicom
+import pydicom
 import json
 import nibabel as nib
 import numpy as np
@@ -870,13 +870,14 @@ class DiffusionPelvisLogic:
             i = 0
             while flag:
                 try:
-                    RefDs = dicom.read_file(lstFilesDCM[i])
+                    RefDs = pydicom.read_file(lstFilesDCM[i])
                     flag = False
                 except:
                     i += 1
 
             try:
                 if RefDs.InPlanePhaseEncodingDirection == 'COL':
+                    phase_encoding_direction = 'AP '
                     phase_encoding_direction = 'AP '
                 elif RefDs.InPlanePhaseEncodingDirection == 'ROW':
                     phase_encoding_direction = 'LR '
@@ -896,30 +897,28 @@ class DiffusionPelvisLogic:
                 win_size += 1
             win_size = max(round_down_to_odd(win_size), 3)
             win_size = str(win_size)
-
+            num_cores = str(cpu_count())
             if check_denoising:
                 loadingbar.value = 3
                 loadingbar.labelText = 'Noise Estimation...'
                 slicer.app.processEvents()
                 if mask:
-                    pipe('dwidenoise -force ' + dir + ' ' + os.path.join(self.tmp,
-                                                                         'd.mif') + ' -extent ' + win_size + ',' + \
-                         win_size + ',' + win_size + ' -mask ' + mask,
-                         True, self.my_env)
+                    pipe('dwidenoise -force -nthreads ' + num_cores + ' ' + dir + ' ' + os.path.join(
+                        self.tmp, 'd.mif'
+                    ) + ' -extent ' + win_size + ',' + win_size + ',' + win_size + ' -mask ' + mask, True, self.my_env)
                 else:
-                    pipe('dwidenoise -force ' + dir + ' ' + os.path.join(self.tmp, 'd.mif' + ' -extent ' + win_size),
-                         True,
-                         self.my_env)
+                    pipe('dwidenoise -force -nthreads ' + num_cores + ' ' + dir + ' ' + os.path.join(
+                        self.tmp, 'd.mif' + ' -extent ' + win_size), True, self.my_env)
             if check_gibbs:
                 loadingbar.value = 4
                 loadingbar.labelText = 'Gibbs Artifact Removal...'
                 slicer.app.processEvents()
                 if check_denoising:
-                    pipe('mrdegibbs  -force ' + os.path.join(self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp, 'g.mif'),
-                         True,
-                         self.my_env)
+                    pipe('mrdegibbs  -force -nthreads ' + num_cores + ' ' + os.path.join(
+                        self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp, 'g.mif'), True, self.my_env)
                 else:
-                    pipe('mrdegibbs -force ' + dir + ' ' + os.path.join(self.tmp, 'g.mif'), True, self.my_env)
+                    pipe('mrdegibbs -force -nthreads ' + num_cores + ' ' + dir + ' ' + os.path.join(
+                        self.tmp, 'g.mif'), True, self.my_env)
             if check_preproc:
                 loadingbar.value = 5
                 loadingbar.labelText = 'Motion and Eddy Currents Correction...'
@@ -949,38 +948,36 @@ class DiffusionPelvisLogic:
                 win_size += 1
             win_size = max(round_down_to_odd(win_size), 3)
             win_size = str(win_size)
-
+            num_cores = str(cpu_count())
             if check_denoising:
                 loadingbar.value = 3
                 loadingbar.labelText = 'Noise Estimation...'
                 slicer.app.processEvents()
                 if mask:
-                    pipe('mrconvert -force ' + nifti_path + ' ' + os.path.join(self.tmp, 'd.mif') +
-                         ' -fslgrad ' + bvec_path + ' ' + bval_path, True, self.my_env)
-                    pipe('dwidenoise -force ' + os.path.join(self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp,
-                                                                                                     'd.mif') + ' -extent ' + win_size + ',' + \
-                         win_size + ',' + win_size + ' -mask ' + mask,
-                         True, self.my_env)
+                    pipe('mrconvert -force  -nthreads ' + num_cores + ' ' + nifti_path + ' ' + os.path.join(
+                        self.tmp, 'd.mif') + ' -fslgrad ' + bvec_path + ' ' + bval_path, True, self.my_env)
+                    pipe('dwidenoise -force  -nthreads ' + num_cores + ' ' + os.path.join(
+                        self.tmp, 'd.mif'
+                    ) + ' ' + os.path.join(
+                        self.tmp, 'd.mif'
+                    ) + ' -extent ' + win_size + ',' + win_size + ',' + win_size + ' -mask ' + mask, True, self.my_env)
                 else:
-                    pipe('mrconvert -force ' + nifti_path + ' ' + os.path.join(self.tmp, 'd.mif') +
-                         ' -fslgrad ' + bvec_path + ' ' + bval_path, True, self.my_env)
+                    pipe('mrconvert -force  -nthreads ' + num_cores + ' ' + nifti_path + ' ' + os.path.join(
+                        self.tmp, 'd.mif') + ' -fslgrad ' + bvec_path + ' ' + bval_path, True, self.my_env)
                     pipe(
-                        'dwidenoise -force ' + os.path.join(self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp,
-                                                                                                    'd.mif' + ' -extent ' + win_size),
-                        True,
-                        self.my_env)
+                        'dwidenoise -force  -nthreads ' + num_cores + ' ' + os.path.join(
+                            self.tmp, 'd.mif') + ' ' + os.path.join(
+                            self.tmp, 'd.mif' + ' -extent ' + win_size), True, self.my_env)
             if check_gibbs:
                 loadingbar.value = 4
                 loadingbar.labelText = 'Gibbs Artifact Removal...'
                 slicer.app.processEvents()
                 if check_denoising:
-                    pipe('mrdegibbs  -force ' + os.path.join(self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp, 'g.mif'),
-                         True,
-                         self.my_env)
+                    pipe('mrdegibbs  -force -nthreads ' + num_cores + ' ' + os.path.join(
+                        self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp, 'g.mif'), True, self.my_env)
                 else:
-                    pipe('mrdegibbs -force ' + nifti_path + ' ' + os.path.join(self.tmp,
-                                                                               'g.mif') + ' -fslgrad ' + bvec_path + ' ' + bval_path,
-                         True, self.my_env)
+                    pipe('mrdegibbs -force -nthreads ' + num_cores + ' ' + nifti_path + ' ' + os.path.join(
+                        self.tmp, 'g.mif') + ' -fslgrad ' + bvec_path + ' ' + bval_path, True, self.my_env)
             if check_preproc:
                 loadingbar.value = 5
                 loadingbar.labelText = 'Motion and Eddy Currents Correction...'
@@ -1003,31 +1000,28 @@ class DiffusionPelvisLogic:
         loadingbar.value = 6
         loadingbar.labelText = 'Bias Field Correction...'
         slicer.app.processEvents()
+        num_cores = str(cpu_count())
         if check_preproc:
             pipe(
-                'dwibiascorrect -force -ants ' + os.path.join(self.tmp, 'p.mif') + ' ' + os.path.join(self.tmp,
-                                                                                                      'r.mif'),
-                True, self.my_env)
+                'dwibiascorrect -force ants -nthreads ' + num_cores + ' ' + os.path.join(
+                    self.tmp, 'p.mif') + ' ' + os.path.join(self.tmp, 'r.mif'), True, self.my_env)
         elif check_gibbs:
             pipe(
-                'dwibiascorrect -force -ants ' + os.path.join(self.tmp, 'g.mif') + ' ' + os.path.join(self.tmp,
-                                                                                                      'r.mif'),
-                True, self.my_env)
+                'dwibiascorrect -force ants -nthreads ' + num_cores + ' ' + os.path.join(
+                    self.tmp, 'g.mif') + ' ' + os.path.join(self.tmp, 'r.mif'), True, self.my_env)
         elif check_denoising:
             pipe(
-                'dwibiascorrect -force -ants ' + os.path.join(self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp,
-                                                                                                      'r.mif'),
-                True, self.my_env)
+                'dwibiascorrect -force ants -nthreads ' + num_cores + ' ' + os.path.join(
+                    self.tmp, 'd.mif') + ' ' + os.path.join(self.tmp, 'r.mif'), True, self.my_env)
         else:
             if dir:
                 pipe(
-                    'dwibiascorrect -force -ants ' + dir + ' ' + os.path.join(self.tmp, 'r.mif'),
-                    True, self.my_env)
+                    'dwibiascorrect -force ants -nthreads ' + num_cores + ' ' + dir + ' ' + os.path.join(
+                        self.tmp, 'r.mif'), True, self.my_env)
             else:
                 pipe(
-                    'dwibiascorrect -force -ants ' + nifti_path + ' ' + os.path.join(self.tmp,
-                                                                                     'r.mif') + ' -fslgrad ' + bvec_path + ' ' + bval_path,
-                    True, self.my_env)
+                    'dwibiascorrect -force ants -nthreads ' + num_cores + ' ' + nifti_path + ' ' + os.path.join(
+                        self.tmp, 'r.mif') + ' -fslgrad ' + bvec_path + ' ' + bval_path, True, self.my_env)
 
         loadingbar.value = 7
         loadingbar.labelText = 'Loading Corrected DWI...'
@@ -1035,9 +1029,8 @@ class DiffusionPelvisLogic:
         nii_path = os.path.join(self.tmp, 'r.nii')
         bval_path = os.path.join(self.tmp, 'r.bval')
         bvec_path = os.path.join(self.tmp, 'r.bvec')
-        pipe('mrconvert -force  -stride -1,2,3,4 ' + os.path.join(self.tmp,
-                                                                  'r.mif') + ' ' + nii_path + ' -export_grad_fsl ' + bvec_path + ' ' + bval_path,
-             True, self.my_env)
+        pipe('mrconvert -force  -stride -1,2,3,4  -nthreads ' + num_cores + ' ' + os.path.join(
+            self.tmp, 'r.mif') + ' ' + nii_path + ' -export_grad_fsl ' + bvec_path + ' ' + bval_path, True, self.my_env)
 
         loadingbar.value = 8
         loadingbar.labelText = ''

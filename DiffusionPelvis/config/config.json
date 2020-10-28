@@ -1,4 +1,4 @@
 {
-  "MRTrix_path": "/home/imag2/mrtrix3/bin/",
-  "ANTS_path": "/home/imag2/ANTs/install/bin/"
+  "MRTrix_path": "/home/imag2/miniconda3/bin/",
+  "ANTS_path": "/opt/ANTs/bin"
 }

@@ -1,6 +1,5 @@
 import json
 import os
-import pickle
 import shutil
 import sys
 import tempfile
@@ -12,18 +11,15 @@ try:
 except ImportError:
     pass
 from subprocess import (call)
-from builtins import int
 import ctk
 
 import numpy as np
-import numpy.linalg as npl
 import qt
 import slicer
 import vtk
+from joblib import cpu_count
+from vtk.util import numpy_support as ns
 
-from scipy.ndimage import generate_binary_structure
-from scipy.ndimage.morphology import binary_dilation, binary_fill_holes, binary_opening, binary_erosion
-from scipy.spatial import ConvexHull, Delaunay
 from functions import *
 from functions import filter as ft
 
@@ -124,84 +120,6 @@ class TractographyPelvisWidget:
         return 'TractographyPelvis GUI class'
 
     def setup(self):
-
-        # seedsCollapsibleButton = ctk.ctkCollapsibleButton()
-        # seedsCollapsibleButton.text = 'Automatic Seeds generation'
-        #
-        # seedsCollapsibleButton.collapsed = True
-        #
-        # self.layout.addWidget(seedsCollapsibleButton)
-        #
-        # seedsFormLayout = qt.QFormLayout(seedsCollapsibleButton)
-        #
-        # self.sacrumSelector = slicer.qMRMLNodeComboBox()
-        # self.sacrumSelector.nodeTypes = ['vtkMRMLLabelMapVolumeNode']
-        # self.sacrumSelector.selectNodeUponCreation = True
-        # self.sacrumSelector.addEnabled = False
-        # self.sacrumSelector.removeEnabled = False
-        # self.sacrumSelector.noneEnabled = False
-        # self.sacrumSelector.showHidden = False
-        # self.sacrumSelector.renameEnabled = False
-        # self.sacrumSelector.showChildNodeTypes = False
-        # self.sacrumSelector.setMRMLScene(slicer.mrmlScene)
-        #
-        # self.onsacrumSelect()
-        #
-        # self.sacrumSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onsacrumSelect)
-        # seedsFormLayout.addRow('Input Sacrum Label: ', self.sacrumSelector)
-        #
-        # self.faSelector = slicer.qMRMLNodeComboBox()
-        # self.faSelector.nodeTypes = ['vtkMRMLScalarVolumeNode']
-        # self.faSelector.selectNodeUponCreation = True
-        # self.faSelector.addEnabled = False
-        # self.faSelector.removeEnabled = False
-        # self.faSelector.noneEnabled = False
-        # self.faSelector.showHidden = False
-        # self.faSelector.renameEnabled = False
-        # self.faSelector.showChildNodeTypes = False
-        # self.faSelector.setMRMLScene(slicer.mrmlScene)
-        #
-        # self.onfaSelect()
-        #
-        # self.faSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onfaSelect)
-        # seedsFormLayout.addRow('FA map: ', self.faSelector)
-        #
-        # self.markups_selector = slicer.qSlicerSimpleMarkupsWidget()
-        # self.markups_selector.objectName = 'seedFiducialsNodeSelector'
-        # self.markups_selector = slicer.qSlicerSimpleMarkupsWidget()
-        # self.markups_selector.objectName = 'seedFiducialsNodeSelector'
-        # self.markups_selector.toolTip = "Select a fiducial to use as the origin of the algorithm."
-        # self.markups_selector.setNodeBaseName("OriginSeeds")
-        # self.markups_selector.defaultNodeColor = qt.QColor(202, 169, 250)
-        # # self.markups_selector.tableWidget().hide()
-        # self.markups_selector.maximumHeight = 150
-        # self.markups_selector.markupsSelectorComboBox().noneEnabled = False
-        # # self.markups_selector.markupsPlaceWidget().placeMultipleMarkups = slicer.qSlicerMarkupsPlaceWidget.ForcePlaceSingleMarkup
-        # seedsFormLayout.addRow("Initial points:", self.markups_selector)
-        # self.parent.connect('mrmlSceneChanged(vtkMRMLScene*)',
-        #                     self.markups_selector, 'setMRMLScene(vtkMRMLScene*)')
-        #
-        # self.autoseedsSelector = slicer.qMRMLNodeComboBox()
-        # self.autoseedsSelector.nodeTypes = ['vtkMRMLLabelMapVolumeNode']
-        # self.autoseedsSelector.selectNodeUponCreation = True
-        # self.autoseedsSelector.addEnabled = True
-        # self.autoseedsSelector.removeEnabled = False
-        # self.autoseedsSelector.noneEnabled = False
-        # self.autoseedsSelector.showHidden = False
-        # self.autoseedsSelector.renameEnabled = False
-        # self.autoseedsSelector.showChildNodeTypes = False
-        # self.autoseedsSelector.setMRMLScene(slicer.mrmlScene)
-        #
-        # self.autoseedsSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.onautoseedsSelect)
-        # seedsFormLayout.addRow('Output Seeds Label: ', self.autoseedsSelector)
-        #
-        # self.autoseedsButton = qt.QPushButton('Extract Seeds')
-        # self.autoseedsButton.toolTip = 'Extract tractography seed points from the sacrum segmentation and the fa map'
-        # self.autoseedsButton.enabled = True
-        #
-        # self.autoseedsButton.connect('clicked(bool)', self.onautoseedsButton)
-        # seedsFormLayout.addRow(self.autoseedsButton)
-
         tractoCollapsibleButton = ctk.ctkCollapsibleButton()
         tractoCollapsibleButton.text = 'Tractography'
 
@@ -530,42 +448,6 @@ class TractographyPelvisWidget:
     def onoutfiltersSelect(self):
         self.outfiltersNode = self.outfiltersSelector.currentNode()
 
-    # def onsacrumSelect(self):
-    #     if self.sacrumSelector.currentNode():
-    #         sacrumNode = slicer.util.arrayFromVolume(self.sacrumSelector.currentNode())
-    #         self.sacrumNode = np.copy(sacrumNode)
-    #         self.sacrumNode = np.swapaxes(self.sacrumNode, 0, 2)
-    #         ijkToRas = vtk.vtkMatrix4x4()
-    #         self.sacrumSelector.currentNode().GetIJKToRASMatrix(ijkToRas)
-    #         self.sacrum_affine = vtkmatrix_to_numpy(ijkToRas)
-    #         self.ijkToRas = ijkToRas
-
-    # def onfaSelect(self):
-    #     if self.faSelector.currentNode():
-    #         faNode = slicer.util.arrayFromVolume(self.faSelector.currentNode())
-    #         self.faNode = np.copy(faNode)
-    #         self.faNode = np.swapaxes(self.faNode, 0, 2)
-    #         ijkToRas = vtk.vtkMatrix4x4()
-    #         self.faSelector.currentNode().GetIJKToRASMatrix(ijkToRas)
-    #         self.fa_affine = vtkmatrix_to_numpy(ijkToRas)
-    #
-    #  def onautoseedsSelect(self):
-    #     self.autoseedsNode = self.autoseedsSelector.currentNode()
-    #
-    # def onautoseedsButton(self):
-    #     current_seeds_node = self.markups_selector.currentNode()
-    #     fid_list = []
-    #     for n in range(current_seeds_node.GetNumberOfFiducials()):
-    #         current = [0, 0, 0]
-    #         current_seeds_node.GetNthFiducialPosition(n, current)
-    #         fid_list.append(current)
-    #     print fid_list
-    #
-    #     if self.sacrumNode.any() and self.faNode.any():
-    #         seeds = self.logic.autoseeds(self.sacrumNode, self.faNode, self.sacrum_affine, self.fa_affine)
-    #     slicer.util.updateVolumeFromArray(self.autoseedsNode, np.swapaxes(seeds, 0, 2))
-    #     self.autoseedsNode.SetIJKToRASMatrix(self.ijkToRas)
-
     def ontractoButton(self):
         if self.dwiNode and self.sliderSeeds.value > self.sliderCutoff.value and (
                 self.tractoNode or self.radio_whole.isChecked()) and self.seedsNode:
@@ -745,76 +627,31 @@ class TractographyPelvisLogic:
     def __str__(self):
         return 'TractographyPelvis implementation class'
 
-    # @staticmethod
-    # def autoseeds(sacrum, fa, affine_sacrum, affine_fa):
-    #     # struct = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-    #     struct = np.ones((3, 3), dtype=np.uint8)
-    #     sacrum_convex = np.zeros(sacrum.shape)
-    #     for i in range(sacrum.shape[1]):
-    #         slice2d = np.zeros(sacrum[:, i, :].shape)
-    #         borders = np.logical_xor(sacrum[:, i, :], binary_erosion(sacrum[:, i, :], struct))
-    #         points = np.argwhere(borders)
-    #         try:
-    #             hull = ConvexHull(points)
-    #             deln = Delaunay(points[hull.vertices])
-    #             idx = np.stack(np.indices(sacrum[:, i, :].shape), axis=-1)
-    #             out_idx = np.nonzero(deln.find_simplex(idx) + 1)
-    #             slice2d[out_idx] = 1
-    #             slice2d = np.logical_xor(slice2d, sacrum[:, i, :])
-    #         except:
-    #             pass
-    #         sacrum_convex[:, i, :] = slice2d
-    #
-    #     convex_points = np.argwhere(sacrum_convex)
-    #     label_vox2fa_vox = npl.inv(affine_fa).dot(affine_sacrum)
-    #     fa_points = np.round(apply_affine(label_vox2fa_vox, convex_points))
-    #     for i, ind in enumerate(fa_points.astype(int)):
-    #         if fa[tuple(ind)] < 0.1:
-    #             index = convex_points[i]
-    #             sacrum_convex[tuple(index)] = 0
-    #
-    #     struct = generate_binary_structure(3, 3)
-    #     sacrum_convex = binary_opening(sacrum_convex, struct)
-    #     sacrum_convex = binary_dilation(sacrum_convex, struct)
-    #     sacrum_convex = binary_fill_holes(sacrum_convex, struct)
-    #     sacrum_convex[np.nonzero(sacrum)] = 0
-    #
-    #     # highest_point = np.amax(np.transpose(np.nonzero(sacrum_convex))[:, 1])
-    #     # lowest_point = np.amin(np.transpose(np.nonzero(sacrum_convex))[:, 1])
-    #     # print highest_point
-    #     # print lowest_point
-    #     #
-    #     # sacrum_convex[:, highest_point - 3:highest_point - 3, :] = 1
-    #
-    #     return sacrum_convex.astype(np.int16)
-
     def tracts(self, Minlength, Maxlength, Cutoff, Seeds_T, Angle, data_path, Mask, Seeds, ROE, fbvec, fbval, mode,
                is_whole):
+        num_cores = str(cpu_count())
         if mode == 0:
-            string = 'dwi2tensor -force ' + data_path + ' ' + os.path.join(self.tmp,
-                                                                           'DTI.mif') + ' -fslgrad ' + fbvec + ' ' + fbval
+            string = 'dwi2tensor -force -nthreads ' + num_cores + ' ' + data_path + ' ' + os.path.join(
+                self.tmp, 'DTI.mif') + ' -fslgrad ' + fbvec + ' ' + fbval
             if Mask:
                 string = string + ' -mask ' + Mask
             pipe(string, True, self.my_env)
 
-            pipe('tensor2metric -force ' + os.path.join(self.tmp, 'DTI.mif') + ' -vec ' + os.path.join(self.tmp,
-                                                                                                       'eigen.mif'),
-                 True, self.my_env)
+            pipe('tensor2metric -force -nthreads ' + num_cores + ' ' + os.path.join(
+                self.tmp, 'DTI.mif') + ' -vec ' + os.path.join(self.tmp, 'eigen.mif'), True, self.my_env)
 
             if not is_whole:
-                string = 'tckgen -force ' + os.path.join(self.tmp, 'eigen.mif') + ' ' + os.path.join(self.tmp,
-                                                                                                     'tracto.tck') + ' -algorithm FACT -cutoff ' + str(
-                    Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + ' -minlength ' + str(Minlength) + \
-                         ' -maxlength ' + str(
-                    Maxlength) + ' -seed_random_per_voxel ' + Seeds + ' 3 ' + ' -angle ' + str(
-                    Angle)
+                string = 'tckgen -force -nthreads ' + num_cores + ' '  + os.path.join(
+                    self.tmp, 'eigen.mif') + ' ' + os.path.join(
+                    self.tmp, 'tracto.tck') + ' -algorithm FACT -cutoff ' + str(Cutoff) + ' -seed_cutoff ' + str(
+                    Seeds_T) + ' -minlength ' + str(Minlength) + ' -maxlength ' + str(
+                    Maxlength) + ' -seed_random_per_voxel ' + Seeds + ' 3 ' + ' -angle ' + str(Angle)
             else:
-                string = 'tckgen -force ' + os.path.join(self.tmp, 'eigen.mif') + ' ' + os.path.join(self.tmp,
-                                                                                                     'tracto.tck') + ' -algorithm FACT -cutoff ' + str(
-                    Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + ' -minlength ' + str(Minlength) + \
-                         ' -maxlength ' + str(
-                    Maxlength) + ' -seed_image ' + Seeds + ' -angle ' + str(
-                    Angle) + ' -select 1M -step 1'
+                string = 'tckgen -force -nthreads ' + num_cores + ' '  + os.path.join(
+                    self.tmp, 'eigen.mif') + ' ' + os.path.join(
+                    self.tmp, 'tracto.tck') + ' -algorithm FACT -cutoff ' + str(Cutoff) + ' -seed_cutoff ' + str(
+                    Seeds_T) + ' -minlength ' + str(Minlength) + ' -maxlength ' + str(
+                    Maxlength) + ' -seed_image ' + Seeds + ' -angle ' + str(Angle) + ' -select 1M -step 1'
             if Mask:
                 string = string + ' -mask ' + Mask
             if ROE:
@@ -822,14 +659,14 @@ class TractographyPelvisLogic:
 
             pipe(string, True, self.my_env)
         else:
-            string = 'dwi2response tournier ' + data_path + ' ' + os.path.join(self.tmp,
-                                                                               'response.txt') + ' -fslgrad ' + fbvec + ' ' + fbval
+            string = 'dwi2response tournier -nthreads ' + num_cores + ' ' + data_path + ' ' + os.path.join(
+                self.tmp, 'response.txt') + ' -fslgrad ' + fbvec + ' ' + fbval
             if Mask:
                 string = string + ' -mask ' + Mask
             pipe(string, True, self.my_env)
 
-            string = 'dwi2fod csd ' + data_path + ' ' + os.path.join(self.tmp, 'response.txt') + ' ' + os.path.join(
-                self.tmp, 'FOD.mif') + ' -fslgrad ' + fbvec + ' ' + fbval
+            string = 'dwi2fod csd -nthreads ' + num_cores + ' ' + data_path + ' ' + os.path.join(
+                self.tmp, 'response.txt') + ' ' + os.path.join(self.tmp, 'FOD.mif') + ' -fslgrad ' + fbvec + ' ' + fbval
             if Mask:
                 string = string + ' -mask ' + Mask
             pipe(string, True, self.my_env)
@@ -840,17 +677,17 @@ class TractographyPelvisLogic:
                 algorithm = 'iFOD2'
 
             if not is_whole:
-                string = 'tckgen -force ' + os.path.join(self.tmp, 'FOD.mif') + ' ' + os.path.join(self.tmp,
-                                                                                                   'tracto.tck') + \
-                         ' -algorithm ' + algorithm + ' -cutoff ' + str(Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + \
-                         ' -minlength ' + str(Minlength) + ' -maxlength ' + str(Maxlength) + ' -seed_random_per_voxel ' \
-                         + Seeds + ' 3  -fslgrad ' + fbvec + ' ' + fbval
+                string = 'tckgen -force -nthreads ' + num_cores + ' '  + os.path.join(
+                    self.tmp, 'FOD.mif') + ' ' + os.path.join(self.tmp,'tracto.tck') + ' -algorithm ' + algorithm + \
+                         ' -cutoff ' + str(Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + ' -minlength ' + str(
+                    Minlength) + ' -maxlength ' + str(Maxlength) + ' -seed_random_per_voxel ' + \
+                         Seeds + ' 3  -fslgrad ' + fbvec + ' ' + fbval
             else:
-                string = 'tckgen -force ' + os.path.join(self.tmp, 'FOD.mif') + ' ' + os.path.join(self.tmp,
-                                                                                                   'tracto.tck') + \
-                         ' -algorithm ' + algorithm + ' -cutoff ' + str(Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + \
-                         ' -minlength ' + str(Minlength) + ' -maxlength ' + str(Maxlength) + ' -seed_image ' \
-                         + Seeds + '  -fslgrad ' + fbvec + ' ' + fbval + ' -select 1M -step 1'
+                string = 'tckgen -force -nthreads ' + num_cores + ' '  + os.path.join(
+                    self.tmp, 'FOD.mif') + ' ' + os.path.join(self.tmp, 'tracto.tck') + ' -algorithm ' + algorithm + \
+                         ' -cutoff ' + str(Cutoff) + ' -seed_cutoff ' + str(Seeds_T) + ' -minlength ' + str(
+                    Minlength) + ' -maxlength ' + str(Maxlength) + ' -seed_image ' + Seeds +  \
+                         '  -fslgrad ' + fbvec + ' ' + fbval + ' -select 1M -step 1'
 
             if Mask:
                 string = string + ' -mask ' + Mask
@@ -881,11 +718,73 @@ def tck2vtk(path_tck):
 
 
 def read_tck(filename):
-    tck_object = tck.load(filename)
-    streamlines = tck_object.streamlines
-    header = tck_object.header
+    header = read_mrtrix_header(filename)
+
+    vertices, line_starts, line_ends = read_mrtrix_streamlines(filename, header)
+    streamlines = []
+    for s, e in zip(line_starts, line_ends):
+        streamlines.append(vertices[s:e, :])
 
     return streamlines, header
+
+
+def read_mrtrix_header(in_file):
+    fileobj = open(in_file, "rb")
+    header = {}
+    #iflogger.info("Reading header data...")
+    for line in fileobj:
+        line = line.decode()
+        if line == "END\n":
+            #iflogger.info("Reached the end of the header!")
+            break
+        elif ": " in line:
+            line = line.replace("\n", "")
+            line = line.replace("'", "")
+            key = line.split(": ")[0]
+            value = line.split(": ")[1]
+            header[key] = value
+            #iflogger.info('...adding "%s" to header for key "%s"', value, key)
+    fileobj.close()
+    header["count"] = int(header["count"].replace("\n", ""))
+    header["offset"] = int(header["file"].replace(".", ""))
+    return header
+
+
+def read_mrtrix_streamlines(in_file, header):
+    byte_offset = header["offset"]
+    stream_count = header["count"]
+    datatype = header["datatype"]
+    dt = 4
+    if datatype.startswith( 'Float64' ):
+        dt = 8
+    elif not datatype.startswith( 'Float32' ):
+        print('Unsupported datatype: ' + datatype)
+        return
+    #tck format stores three floats (x/y/z) for each vertex
+    num_triplets = (os.path.getsize(in_file) - byte_offset) // (dt * 3)
+    dt = 'f' + str(dt)
+    if datatype.endswith( 'LE' ):
+        dt = '<'+dt
+    if datatype.endswith( 'BE' ):
+        dt = '>'+dt
+    vtx = np.fromfile(in_file, dtype=dt, count=(num_triplets*3), offset=byte_offset)
+    vtx = np.reshape(vtx, (-1,3))
+    #make sure last streamline delimited...
+    if not np.isnan(vtx[-2,1]):
+        vtx[-1,:] = np.nan
+    line_ends, = np.where(np.all(np.isnan(vtx), axis=1))
+    if stream_count != line_ends.size:
+        print('expected {} streamlines, found {}'.format(stream_count, line_ends.size))
+    line_starts = line_ends + 0
+    line_starts[1:line_ends.size] = line_ends[0:line_ends.size-1]
+    #the first line starts with the first vertex (index 0), so preceding NaN at -1
+    line_starts[0] = -1
+    #first vertex of line is the one after a NaN
+    line_starts = line_starts + 1
+    #last vertex of line is the one before NaN
+    line_ends = line_ends - 1
+
+    return vtx, line_starts, line_ends
 
 
 def save_vtk(filename, tracts, lines_indices=None):
