@@ -1,7 +1,6 @@
 import numpy as np
-from dipy.tracking.metrics import mean_orientation
-
 from .input_output import save_vtk, read_vtk
+from dipy.tracking.metrics import mean_orientation
 
 
 def filter(in_fpath, out_fpath, dir):

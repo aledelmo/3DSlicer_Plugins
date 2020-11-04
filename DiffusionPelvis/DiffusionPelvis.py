@@ -1,19 +1,19 @@
-import ctk
-import pydicom
-import json
-import nibabel as nib
-import numpy as np
 import os
-import pickle
 import qt
+import sys
+import ctk
+import json
+import pickle
 import shutil
 import slicer
-import sys
+import pydicom
 import tempfile
 import unittest
-from contextlib import contextmanager
-from joblib import cpu_count
+import numpy as np
+import nibabel as nib
 from subprocess import call
+from joblib import cpu_count
+from contextlib import contextmanager
 
 __author__ = 'Alessandro Delmonte'
 __email__ = 'delmonte.ale92@gmail.com'
