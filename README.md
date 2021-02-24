@@ -70,13 +70,13 @@ inside and outside C and L is a gradient- enhanced image, obtained by subtractin
 *Note: More documentation is available in the respective folders.*
 *Note: Please note that these plug-ins implement external software.*
 
-1. [DiffusionPelvis](DiffusionPelvis)
+1. [DiffusionPelvis](DWI)
    
 This module provides the three most important steps for the exploitation of diffusion images: denoising (PCA, Gibbs, Motion and
 Eddy currents), registration (rigid, affine, elastic) and volume extraction (FA, MD,b0). Contrary to other Slicer modules,
 this one does not require intermediate steps and works directly on DWI image nodes.
 
-2. [TractographyPelvis](TractographyPelvis)
+2. [TractographyPelvis](Tractography)
 
 This module aims to compensate the 3D Slicer lack of functionality regarding tractography algorithms. MRTrix3
 methods are wrapped to extend and enrich the Slicer framework.
