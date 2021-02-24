@@ -1,8 +1,4 @@
 # Tractography Pelvis
-This module aims to compensate the 3D Slicer lack of functionality regarding tractography algorithms. Here the MRTrix3
-methods are wrapped to extend and enrich the Slicer framework.
-
-Please note that this plug-in implements external softwares. More specific indication can be found on the [MRTrix3][1] website.
 
 ## Installation
 Prerequisites: MRTrix3 must be installed on the computer. Detailed instructions on how to install it at this link: <https://mrtrix.readthedocs.io/en/latest/installation/before_install.html>
@@ -29,7 +25,7 @@ saved as a .tck on the drive. The ROI-based tractograms will be automatically lo
 The seed map can be specified either using the standard IMAG2 segmentation list or with a binary mask.
 
 Exploiting the most prominent MRTrix3 methods three type of tractography algorithms are available, based on both the
-classical diffusion tensor analysis as well as the most recent Constrained Spherical Deconvolution theory.
+classical diffusion tensor analysis and the most recent Constrained Spherical Deconvolution theory.
 
 The default parameters have been imposed with in mind the extraction of a ROI-based pelvic tractogram
 
@@ -59,12 +55,12 @@ ___
 * **Whole Pelvis Mask**: Limit the tractogram in the selected mask. Attention: the fibers extending over the mask border are 
 not suppressed completely but truncated at the interface.
 
-* **Exclusion mask**: All the fibers entering in this zone, even if for just one point, are completely discarded.
+* **Exclusion mask**: All the fibers entering this zone, even if for just one point, are completely discarded.
 
 * **Seed Threshold**: Minimum value needed to consider a voxel a seed point. It indicates an FA value for diffusion tensor based
 algorithms and FOD (fiber orientation distribution) for CSD based methods.
 
-* **Cutoff**: Fiber tracking termination condition. When a streamlines enters in a part of the image with a lower FA than the cutoff
+* **Cutoff**: Fiber tracking termination condition. When a streamline enters a part of the image with a lower FA than the cutoff
 threshold the tracking is concluded (FOD amplitude for CSD methods). (The selected Cutoff must always be lower of the Seed Threshold)
 
 * **Admissible Angle**: maximum angle, in degree, that is allowed between tracking steps.

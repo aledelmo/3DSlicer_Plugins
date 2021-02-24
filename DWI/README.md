@@ -1,10 +1,4 @@
 # Diffusion Pelvis
-This module provides the three most important steps for the exploitation of diffusion images for tractography purposes:
-denoising, registration and metric volumes extraction.
-Contrary to other Slicer modules, this one does not requires intermediate steps and works directly on DWI image nodes.
-
-Please note that this plug-in implements external software. More specific indication can be found on the [MRTrix3][1], [FSL][3]
-and [ANTs][2] websites.
 
 ## Installation
 Prerequisites: MRTrix3 and ANTs must be installed on the computer. Detailed instructions on how to install them at the following links:<br>
@@ -46,7 +40,7 @@ when the subject moves during the diffusion encoding sequence are fixed predicti
 It aims to correct the field inhomogeneity modeling with a B-spline the bias itself and iteratively remapping the intensities 
 using histogram-based deconvolutions.
 * **Masking**: The masking procedure restrict the image to the regions containing anatomical information. The mask must be
-provied in input and can be estimated using the Slicer module Foreground Masking. Masking the image allows for more accurate results
+provided in input and can be estimated using the Slicer module Foreground Masking. Masking the image allows for more accurate results
 during all the other steps and reduce the computational time.
 
 #### GUI
@@ -68,9 +62,9 @@ the DWI and the T2 image must be in the same space and completely aligned. Here 
 * **Rigid**: Combination of transformation that do not modify the distance between the points of the image. It will apply a
 series of rotation and translations in order to have the images roughly aligned.
 * **Affine**: Transformation that preserves parallel lines. Adding shears and scaling to the rigid transform a finer
-registration is prepared, with an higher chance to have the two images with matching proportions.
+registration is prepared, with a higher chance to have the two images with matching proportions.
 * **Elastic**: The elastic deformation will shift and interpolate the voxels of the moving image in order to match as
-best as possible the fixed image intensities. It can results in the most accurate results at the expense of the computational
+good as possible the fixed image intensities. It can result in the most accurate results at the expense of the computational
 time.
 
 All the registration methods above described are all implemented used ANTs. The parameters have been chosen with in mind the
@@ -87,12 +81,12 @@ the results.
 Please note that the elastic deformation is a computationally intensive operation and could take a long time (up to some hours).
 
 #### GUI
-The registration is performed between a DWI (moving image) and a volumetric strutural image (fixed image). The wholy body masks
+The registration is performed between a DWI (moving image) and a volumetric structural image (fixed image). The wholy body masks
 can be used to constrain the computation to the portion of the images carrying anatomical information. If only one mask is 
 specified it will be ignored. We generally suggest using the masks only for the elastic deformation.
 
-Three registration options are present, that should be set analyzing how much the two images are disaligned.
-The elastic deformation can be additionaly fine tuned choosing a preset that controls the termination conditions. A more
+Three registration options are present, that should be set analyzing how much the two images are misaligned.
+The elastic deformation can be additionaly fine-tuned choosing a preset that controls the termination conditions. A more
 strong deformation will force a more strict similarity control but could cause overfitting.
 ___
 ### Measures
